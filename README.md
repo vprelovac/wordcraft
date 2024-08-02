@@ -288,6 +288,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 For any questions or feedback, please open an issue in the GitHub repository.
 
----
+## Credits
 
-Detailed technical documentation and level data can be found in the [Technical Documentation](TECHNICAL.md) file.
+[Atomix](https://www.retrogames.cz/play_501-DOS.php) for inspiration. [Aider](https://aider.chat) for coding.
