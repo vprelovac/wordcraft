@@ -1,4 +1,4 @@
-# WordCraft
+<img width="750" alt="Screenshot 2024-08-02 at 09 05 27" src="https://github.com/user-attachments/assets/a1edd302-6e3f-46e4-9c7f-138db04a05e6">
 
 WordCraft is an engaging word puzzle game where players rearrange words to form target sentences. The game features a grid-based board with obstacles (walls) and a time limit, challenging players to strategically move words and recreate sentences in the correct order, either horizontally or vertically.
 
@@ -11,6 +11,9 @@ WordCraft is an engaging word puzzle game where players rearrange words to form 
 - Animations and visual feedback
 - Local storage for best scores
 - Demo mode for new players
+
+<img width="1185" alt="Screenshot 2024-08-02 at 09 04 49" src="https://github.com/user-attachments/assets/7ae7e509-c067-42a4-8ea5-a87adb371a0d">
+
 
 ## How to Play
 
