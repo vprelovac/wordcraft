@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WordCraft</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='2' y='2' width='20' height='20' fill='%234CAF50'/><rect x='4' y='4' width='16' height='16' fill='%231F2937'/><rect x='10' y='2' width='4' height='20' fill='%23F44336'/><rect x='2' y='10' width='20' height='4' fill='%232196F3'/><rect x='4' y='4' width='4' height='4' fill='%23FFC107'/><rect x='16' y='4' width='4' height='4' fill='%23FFC107'/><rect x='4' y='16' width='4' height='4' fill='%23FF9800'/><rect x='16' y='16' width='4' height='4' fill='%23FF9800'/></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-gentle-pulse {
+            animation: gentle-pulse 1.5s ease-in-out infinite;
+        }
+        .word-cell {
+            transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .word-cell.animating {
+            z-index: 10;
+        }
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+           
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .cell {
+                font-size: 0.75rem; /* Default font size */
+            }
+        }
+        .wall {
+            background-color: #4B5563;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.3), inset 2px 2px 5px rgba(255,255,255,0.1);
+            background-image:
+                linear-gradient(45deg, #3f4652 25%, transparent 25%),
+                linear-gradient(-45deg, #3f4652 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #3f4652 75%),
+                linear-gradient(-45deg, transparent 75%, #3f4652 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+        }
+        .empty { background-color: #1F2937; }
+        .selected-word { 
+            ring: 2px #EAB308; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .word {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            transform: translateY(0);
+            user-select: none;
+            cursor: pointer;
+        }
+        .cell {
+            user-select: none; /* Prevent text selection */
+        }
+        .word::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+        .selection-rectangle {
+            position: absolute;
+            inset: 0;
+            border: 4px solid #F0F0F0;
+            box-shadow: 0 0 8px 2px rgba(240, 240, 240, 0.6);
+            pointer-events: none;
+        }
+</style>
+</head>
+<body class="bg-black min-h-screen flex items-center justify-center overflow-hidden" ontouchstart="return true;">
+    <div id="intro-screen" class="text-center">
+        <!-- SVG Logo -->
+        <div class="mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" viewBox="0 0 24 24">
+                <rect x="2" y="2" width="20" height="20" fill="#4CAF50" />
+                <rect x="4" y="4" width="16" height="16" fill="#1F2937" />
+                <rect x="10" y="2" width="4" height="20" fill="#F44336" />
+                <rect x="2" y="10" width="20" height="4" fill="#2196F3" />
+                <rect x="4" y="4" width="4" height="4" fill="#FFC107" />
+                <rect x="16" y="4" width="4" height="4" fill="#FFC107" />
+                <rect x="4" y="16" width="4" height="4" fill="#FF9800" />
+                <rect x="16" y="16" width="4" height="4" fill="#FF9800" />
+            </svg>
+        </div>
+        <!-- Game Title -->
+        <h1 class="text-4xl font-bold mb-2 text-white">WordCraft</h1>
+        <p class="text-xl mb-6 text-gray-300">Arrange the words to craft the correct sentence, horizontally or vertically.</p>
+        <!-- Instructions -->
+        <div class="text-sm text-gray-400 mb-6">
+
+            <p>Use arrow keys or WASD to move the cursor.</p>
+            <p>Press Enter or Space to select/deselect a word (or use your mouse/touch screen).</p>
+            <p>Move the words to craft the target sentence either horizontally or vertically (in both directions is OK).</p>
+            <p>Press R to restart the current level.</p>
+        
+        </div>
+        <!-- Play Button -->
+        <!-- Tutorial Button -->
+        <button id="start-demo" class="bg-green-500 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg font-semibold mr-4">
+            Tutorial
+        </button>
+        <button id="start-game" class="bg-blue-500 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-lg font-semibold">
+            Play
+        </button>
+        <!-- Copyright Notice and Technical Documentation Link -->
+        <p class="text-xs text-gray-500 mt-4">
+            © 2024 Vladimir Prelovac. All rights reserved. 
+            <a href="./wordcraft.txt" class="text-blue-500 hover:text-blue-700" target="_blank">docs for geeks</a>
+        </p>
+        
+        <script>
+            document.addEventListener('keydown', function(event) {
+                if ((event.key === 'Enter' || event.key === ' ') && !document.getElementById('intro-screen').classList.contains('hidden')) {
+                    document.getElementById('start-game').click();
+                }
+            });
+        </script>
+    </div>
+
+    <div id="game-container" class="bg-gray-900 p-4 sm:p-8 rounded-lg shadow-lg max-w-6xl w-full max-h-screen overflow-auto hidden">
+        <div class="flex flex-col lg:flex-row">
+            <div id="game-info" class="w-full lg:w-1/4 text-white mb-4 lg:mb-0 order-2 lg:order-1 lg:pt-10">
+                <p id="level" class="text-xl flex justify-between">Level: <span class="font-bold text-3xl">1</span></p>
+                <p id="timer" class="text-xl flex justify-between">Time: <span class="font-bold text-3xl">03:00</span></p>
+                <p id="moves" class="text-xl flex justify-between">Moves: <span class="font-bold text-3xl">0</span></p>
+                <p id="min-moves" class="text-xl flex justify-between hidden">Minimum: <span class="font-bold text-3xl">0</span></p>
+                <p id="your-best" class="text-xl flex justify-between hidden">Your Best: <span class="font-bold text-3xl">0</span></p>
+                <div class="flex space-x-2 mt-4">
+                    <button id="restart-level" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded flex-1">
+                        Restart
+                    </button>
+                    <button id="skip-level" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex-1 hidden">
+                        Skip
+                    </button>
+                </div>
+            </div>
+            <div class="flex-grow order-1 lg:order-2 lg:ml-4">
+                <p id="target-sentence" class="text-lg font-semibold mb-4 text-white">Craft: <span class="text-blue-400"></span></p>
+                <div id="game-board" class="w-full grid gap-1 bg-gray-800 rounded text-xs sm:text-sm md:text-base" style="grid-template-columns: repeat(8, minmax(30px, 1fr));">
+                    <!-- Game board will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+     
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <script>
+// Game constants
+const INITIAL_TIMER = 0; // Start from 0 and count up
+const GRID_SIZE = { rows: 8, cols: 8 };
+const ANIMATION_DURATION = 200; // milliseconds
+const TIME_BONUS_MULTIPLIER = 10;
+const MOVE_PENALTY_MULTIPLIER = 5;
+const WALL_PERCENTAGE_INITIAL = 0.3;
+const WALL_PERCENTAGE_DECREASE = 0.02;
+const MIN_WALL_PERCENTAGE = 0.11;
+const TIMER_INTERVAL = 1000; // 1 second
+const LEVEL_COMPLETION_CHECK_DELAY = 50; // milliseconds
+const SWIPE_THRESHOLD = 50; // minimum distance for swipe detection
+
+// Audio context for sound generation
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+// Game mode detection
+let isDesktopMode = true;
+
+function detectGameMode() {
+    isDesktopMode = !('ontouchstart' in window) && !navigator.maxTouchPoints;
+    console.log(`Game mode detected: ${isDesktopMode ? 'Desktop' : 'Mobile'}`);
+}
+
+// Sound generation functions
+function playVerySoftSelectionSound() {
+    // Sound disabled
+}
+
+function playVerySoftDeselectionSound() {
+    // Sound disabled
+}
+
+function playSoftSound(frequency) {
+    // Sound disabled
+}
+
+// CSS classes
+const CSS_CLASSES = {
+    CELL: 'aspect-square flex items-center justify-center text-sm font-bold relative',
+    WALL: 'bg-gray-600',
+    EMPTY: 'bg-gray-100',
+    SELECTED_WORD: 'ring-2 ring-yellow-500',
+    SELECTION_RECTANGLE: 'absolute inset-0 border-4 border-blue-500 pointer-events-none',
+    ANIMATION: 'animate-gentle-pulse'
+};
+
+// Key mappings
+const KEY_MAPPINGS = {
+    UP: ['ArrowUp', 'w', 'W'],
+    DOWN: ['ArrowDown', 's', 'S'],
+    LEFT: ['ArrowLeft', 'a', 'A'],
+    RIGHT: ['ArrowRight', 'd', 'D'],
+    SELECT: ['Enter', ' '],
+    RESTART: ['r', 'R'],
+    NEXT_LEVEL: ['n', 'N']
+};
+
+const gameState = {
+    level: 1,
+    timer: INITIAL_TIMER,
+    timerInterval: null,
+    targetSentence: '',
+    words: [],
+    selectedWordIndex: null,
+    gridSize: GRID_SIZE,
+    wordPositions: [],
+    walls: [],
+    moves: 0,
+    selectionRectangle: { row: 0, col: 0 },
+    rng: null,
+    completedLevels: [],
+};
+
+const levels = [
+    { sentence: "The quick brown fox", seed: 12345, minMoves: 11 },
+    { sentence: "Jumps over the lazy dog", seed: 67894, minMoves: 8 },
+    { sentence: "Better late than never friend", seed: 7788, minMoves: 9 },
+    { sentence: "Make hay while the sun shines", seed: 13579, minMoves: 0 },
+    { sentence: "A stitch in time saves nine", seed: 2462, minMoves: 0 },
+    { sentence: "Actions speak louder than words", seed: 11224, minMoves: 10 },
+    { sentence: "All that glitters is not gold", seed: 447, minMoves: 0 },
+    { sentence: "A rolling stone gathers no moss", seed: 91, minMoves: 0 },
+    { sentence: "Fortune always favors the brave soul", seed: 1321, minMoves: 0 },
+    { sentence: "Practice makes perfect or at least less bad", seed: 456, minMoves: 0 }
+];
+
+const demoLevel = { sentence: "Welcome to WordCraft", seed: 3 };
+
+const wordColors = [
+    'bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-yellow-500',
+    'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-orange-500'
+];
+
+// Game Initialization
+function initGame(isDemo = false) {
+    try {
+        detectGameMode(); // Re-detect game mode in case of window resize or device rotation
+        if (isDemo) {
+            gameState.isDemo = true;
+            gameState.level = 0;
+            gameState.gridSize = { rows: 4, cols: 4 };
+            generateLevel(0);
+        } else {
+            gameState.isDemo = false;
+            if (gameState.level < 1 || gameState.level > levels.length) {
+                throw new Error(`Invalid level: ${gameState.level}`);
+            }
+            gameState.gridSize = GRID_SIZE;
+            generateLevel(gameState.level);
+        }
+        
+        // Load completed levels from local storage
+        const completedLevels = localStorage.getItem('completedLevels');
+        if (completedLevels) {
+            gameState.completedLevels = JSON.parse(completedLevels);
+        }
+        // Debug information
+        // Debug information in CSV format
+        const csvData = [
+            ['Level', 'Sentence', 'Type', 'Row', 'Col'],
+            ...gameState.wordPositions.map((pos, index) => [gameState.level, gameState.targetSentence, `Word ${index + 1}`, pos.row, pos.col]),
+            ...gameState.walls.map((wall, index) => [gameState.level, gameState.targetSentence, `Wall ${index + 1}`, wall.row, wall.col])
+        ];
+        console.log(csvData.map(row => row.join(',')).join('\n'));
+
+        gameState.moves = 0;
+        gameState.selectionRectangle = gameState.wordPositions[0]; // Initialize to first word
+        gameState.selectedWordIndex = 0; // Select first word by default on both desktop and mobile
+        updateGameInfo();
+        createGameBoard();
+        startTimer();
+        updateMovesDisplay();
+        
+        // Update UI based on game mode
+        updateUIForGameMode();
+
+        if (isDemo) {
+            startDemoTutorial();
+        }
+    } catch (error) {
+        console.error("Error initializing game:", error);
+        alert("An error occurred while initializing the game. Please try again.");
+    }
+}
+
+function generateLevel(level) {
+    try {
+        const { gridSize } = gameState;
+        if (!gridSize || typeof gridSize.rows !== 'number' || typeof gridSize.cols !== 'number') {
+            throw new Error('Invalid grid size');
+        }
+
+        const currentLevel = level === 0 ? demoLevel : levels[level - 1];
+        if (!currentLevel) {
+            throw new Error(`Level ${level} not found`);
+        }
+
+        gameState.targetSentence = currentLevel.sentence;
+        if (typeof gameState.targetSentence !== 'string' || gameState.targetSentence.trim() === '') {
+            throw new Error('Invalid target sentence');
+        }
+
+        gameState.words = gameState.targetSentence.split(' ').filter(word => word.trim() !== '');
+        if (gameState.words.length === 0) {
+            throw new Error('No valid words in target sentence');
+        }
+
+        gameState.wordPositions = [];
+
+        // Initialize seeded random number generator for this level
+        gameState.rng = mulberry32(currentLevel.seed);
+
+        // Calculate the number of walls based on the level
+        const totalCells = gridSize.rows * gridSize.cols;
+        const wallPercentage = level === 0 ? 0.1 : Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE);
+        const numWalls = Math.floor(totalCells * wallPercentage);
+
+        gameState.walls = [];
+        for (let i = 0; i < numWalls; i++) {
+            let wall;
+            let attempts = 0;
+            const maxAttempts = 100;
+            do {
+                wall = {
+                    row: Math.floor(gameState.rng() * gridSize.rows),
+                    col: Math.floor(gameState.rng() * gridSize.cols)
+                };
+                attempts++;
+                if (attempts > maxAttempts) {
+                    throw new Error('Unable to place walls after maximum attempts');
+                }
+            } while (gameState.walls.some(w => w.row === wall.row && w.col === wall.col));
+            gameState.walls.push(wall);
+        }
+
+        if (level === 0) {
+            // For demo, place words spread out on the board
+            gameState.wordPositions = [
+                { row: 0, col: 0 }, // "Welcome"
+                { row: 1, col: 2 }, // "to"
+                { row: 3, col: 1 }  // "WordCraft"
+            ];
+        } else {
+            gameState.words.forEach(() => {
+                let position;
+                let attempts = 0;
+                const maxAttempts = 100;
+                do {
+                    position = {
+                        row: Math.floor(gameState.rng() * gridSize.rows),
+                        col: Math.floor(gameState.rng() * gridSize.cols)
+                    };
+                    attempts++;
+                    if (attempts > maxAttempts) {
+                        throw new Error('Unable to place words after maximum attempts');
+                    }
+                } while (isPositionOccupied(position) || isPositionIsolated(position));
+                gameState.wordPositions.push(position);
+            });
+        }
+
+        gameState.isAnimating = false;
+    } catch (error) {
+        console.error("Error generating level:", error);
+        alert("An error occurred while generating the level. Please try again.");
+        throw error;
+    }
+}
+
+function startDemoTutorial() {
+    const tutorialSteps = [
+        { message: "Welcome to WordCraft! Let's learn how to play.", target: '#game-board' },
+        { message: "Your goal is to arrange the words to form the sentence shown at the top.", target: '#target-sentence' },
+        { message: "Words will move until they hit a wall or another word.", target: '#game-board' },
+        { message: isDesktopMode ? "Use arrow keys (or WASD) to move around." : "Tap a word to select it.", target: '.selection-rectangle' },
+        { message: isDesktopMode ? "Press Enter or Space to select or deselect a word." : "Swipe in any direction to move the selected word.", target: '.word' },
+        { message: "Try moving 'to' next to 'Welcome'", target: '#game-board' },
+        { message: "Great job! You've completed the tutorial. Now try the real levels!", target: '#game-board' }
+    ];
+
+    let currentStep = 0;
+
+    function showTutorialStep() {
+        const step = tutorialSteps[currentStep];
+        const tooltip = document.createElement('div');
+        tooltip.className = 'fixed bg-white text-black p-4 rounded-lg shadow-lg z-50';
+        tooltip.textContent = step.message;
+        document.body.appendChild(tooltip);
+
+        const target = document.querySelector(step.target);
+        if (target) {
+            const targetRect = target.getBoundingClientRect();
+            tooltip.style.left = `${targetRect.left}px`;
+            tooltip.style.top = `${targetRect.bottom + 10}px`;
+        }
+
+        setTimeout(() => {
+            document.body.removeChild(tooltip);
+            currentStep++;
+            if (currentStep < tutorialSteps.length && step.message !== "Great job! You've completed the tutorial. Now try the real levels!") {
+                showTutorialStep();
+            }
+        }, 5000);
+    }
+
+    showTutorialStep();
+}
+
+function updateUIForGameMode() {
+    const instructionsElement = document.querySelector('#intro-screen .text-sm');
+    if (isDesktopMode) {
+        instructionsElement.innerHTML = `
+            <p>Desktop controls:</p>
+            <p>- Use arrow keys or WASD to move the cursor.</p>
+            <p>- Press Enter or Space to select/deselect a word.</p>
+            <p>- Move the words to craft the target sentence either horizontally or vertically.</p>
+            <p>- Press R to restart the current level.</p>
+        `;
+    } else {
+        instructionsElement.innerHTML = `
+            <p>Touch controls (recommended for mobile):</p>
+            <p>- Tap a word to select/deselect it.</p>
+            <p>- Swipe in any direction to move the selected word.</p>
+            <p>- Arrange the words to form the target sentence either horizontally or vertically.</p>
+        `;
+    }
+}
+
+// Game State Management
+function generateLevel(level) {
+    try {
+        const { gridSize } = gameState;
+        if (!gridSize || typeof gridSize.rows !== 'number' || typeof gridSize.cols !== 'number') {
+            throw new Error('Invalid grid size');
+        }
+
+        const currentLevel = level === 0 ? demoLevel : levels[level - 1];
+        if (!currentLevel) {
+            throw new Error(`Level ${level} not found`);
+        }
+
+        gameState.targetSentence = currentLevel.sentence;
+        if (typeof gameState.targetSentence !== 'string' || gameState.targetSentence.trim() === '') {
+            throw new Error('Invalid target sentence');
+        }
+
+        gameState.words = gameState.targetSentence.split(' ').filter(word => word.trim() !== '');
+        if (gameState.words.length === 0) {
+            throw new Error('No valid words in target sentence');
+        }
+
+        gameState.wordPositions = [];
+
+        // Initialize seeded random number generator for this level
+        gameState.rng = mulberry32(currentLevel.seed);
+
+        // Calculate the number of walls based on the level
+        const totalCells = gridSize.rows * gridSize.cols;
+        const wallPercentage = level <= 4 
+            ? Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE)
+            : Math.min(WALL_PERCENTAGE_INITIAL + (level - 4) * WALL_PERCENTAGE_DECREASE, WALL_PERCENTAGE_INITIAL);
+        const numWalls = Math.floor(totalCells * wallPercentage);
+
+        gameState.walls = [];
+        for (let i = 0; i < numWalls; i++) {
+            let wall;
+            let attempts = 0;
+            const maxAttempts = 100;
+            do {
+                wall = {
+                    row: Math.floor(gameState.rng() * gridSize.rows),
+                    col: Math.floor(gameState.rng() * gridSize.cols)
+                };
+                attempts++;
+                if (attempts > maxAttempts) {
+                    throw new Error('Unable to place walls after maximum attempts');
+                }
+            } while (gameState.walls.some(w => w.row === wall.row && w.col === wall.col));
+            gameState.walls.push(wall);
+        }
+
+        gameState.words.forEach(() => {
+            let position;
+            let attempts = 0;
+            const maxAttempts = 100;
+            do {
+                position = {
+                    row: Math.floor(gameState.rng() * gridSize.rows),
+                    col: Math.floor(gameState.rng() * gridSize.cols)
+                };
+                attempts++;
+                if (attempts > maxAttempts) {
+                    throw new Error('Unable to place words after maximum attempts');
+                }
+            } while (isPositionOccupied(position) || isPositionIsolated(position));
+            gameState.wordPositions.push(position);
+        });
+
+        gameState.isAnimating = false; // Add this line to initialize the animation state
+    } catch (error) {
+        console.error("Error generating level:", error);
+        alert("An error occurred while generating the level. Please try again.");
+        throw error; // Re-throw the error to be caught by the calling function
+    }
+}
+
+function isPositionIsolated(position) {
+    const { row, col } = position;
+    const { gridSize, walls, wordPositions } = gameState;
+
+    // Check horizontal path
+    let leftBlocked = false;
+    let rightBlocked = false;
+    for (let c = col - 1; c >= 0; c--) {
+        if (walls.some(w => w.row === row && w.col === c)) {
+            leftBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === row && pos.col === c)) {
+            leftBlocked = false;
+            break;
+        }
+    }
+    for (let c = col + 1; c < gridSize.cols; c++) {
+        if (walls.some(w => w.row === row && w.col === c)) {
+            rightBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === row && pos.col === c)) {
+            rightBlocked = false;
+            break;
+        }
+    }
+
+    // Check vertical path
+    let topBlocked = false;
+    let bottomBlocked = false;
+    for (let r = row - 1; r >= 0; r--) {
+        if (walls.some(w => w.row === r && w.col === col)) {
+            topBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === r && pos.col === col)) {
+            topBlocked = false;
+            break;
+        }
+    }
+    for (let r = row + 1; r < gridSize.rows; r++) {
+        if (walls.some(w => w.row === r && w.col === col)) {
+            bottomBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === r && pos.col === col)) {
+            bottomBlocked = false;
+            break;
+        }
+    }
+
+    return (leftBlocked && rightBlocked) || (topBlocked && bottomBlocked);
+}
+
+function isPositionOccupied({ row, col }, excludeWordIndex = -1) {
+    return gameState.wordPositions.some((pos, index) => 
+               index !== excludeWordIndex && pos.row === row && pos.col === col
+           ) ||
+           gameState.walls.some(wall => wall.row === row && wall.col === col);
+}
+
+function findEmptyPosition() {
+    const { gridSize } = gameState;
+    for (let row = 0; row < gridSize.rows; row++) {
+        for (let col = 0; col < gridSize.cols; col++) {
+            if (!isPositionOccupied({ row, col })) {
+                return { row, col };
+            }
+        }
+    }
+    return { row: 0, col: 0 }; // Default position if no empty space is found
+}
+
+// Utility Functions
+function mulberry32(a) {
+    return function() {
+        var t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function isOutOfBounds({ row, col }, gridSize) {
+    return row < 0 || row >= gridSize.rows || col < 0 || col >= gridSize.cols;
+}
+
+function getNextPosition(currentPosition, direction) {
+    return {
+        row: currentPosition.row + directionMap[direction].row,
+        col: currentPosition.col + directionMap[direction].col
+    };
+}
+
+function isValidMove(position, selectedWordIndex) {
+    const { gridSize, walls, wordPositions } = gameState;
+    return !isOutOfBounds(position, gridSize) &&
+           !walls.some(wall => wall.row === position.row && wall.col === position.col) &&
+           !wordPositions.some((pos, index) => index !== selectedWordIndex && pos.row === position.row && pos.col === position.col);
+}
+
+function isPositionOccupied({ row, col }, excludeWordIndex = -1) {
+    return gameState.wordPositions.some((pos, index) => 
+               index !== excludeWordIndex && pos.row === row && pos.col === col
+           ) ||
+           gameState.walls.some(wall => wall.row === row && wall.col === col);
+}
+
+function isPositionIsolated(position) {
+    const { row, col } = position;
+    const { gridSize, walls, wordPositions } = gameState;
+
+    // Check horizontal path
+    let leftBlocked = false;
+    let rightBlocked = false;
+    for (let c = col - 1; c >= 0; c--) {
+        if (walls.some(w => w.row === row && w.col === c)) {
+            leftBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === row && pos.col === c)) {
+            leftBlocked = false;
+            break;
+        }
+    }
+    for (let c = col + 1; c < gridSize.cols; c++) {
+        if (walls.some(w => w.row === row && w.col === c)) {
+            rightBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === row && pos.col === c)) {
+            rightBlocked = false;
+            break;
+        }
+    }
+
+    // Check vertical path
+    let topBlocked = false;
+    let bottomBlocked = false;
+    for (let r = row - 1; r >= 0; r--) {
+        if (walls.some(w => w.row === r && w.col === col)) {
+            topBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === r && pos.col === col)) {
+            topBlocked = false;
+            break;
+        }
+    }
+    for (let r = row + 1; r < gridSize.rows; r++) {
+        if (walls.some(w => w.row === r && w.col === col)) {
+            bottomBlocked = true;
+            break;
+        }
+        if (wordPositions.some(pos => pos.row === r && pos.col === col)) {
+            bottomBlocked = false;
+            break;
+        }
+    }
+
+    return (leftBlocked && rightBlocked) || (topBlocked && bottomBlocked);
+}
+
+function findEmptyPosition() {
+    const { gridSize } = gameState;
+    for (let row = 0; row < gridSize.rows; row++) {
+        for (let col = 0; col < gridSize.cols; col++) {
+            if (!isPositionOccupied({ row, col })) {
+                return { row, col };
+            }
+        }
+    }
+    return { row: 0, col: 0 }; // Default position if no empty space is found
+}
+
+// UI Update Functions
+function updateGameInfo() {
+    const targetSentenceElement = document.querySelector('#target-sentence span');
+    const newHighlightedSentence = highlightCorrectWords(gameState.targetSentence);
+    if (targetSentenceElement.innerHTML !== newHighlightedSentence) {
+        targetSentenceElement.innerHTML = newHighlightedSentence;
+        document.querySelector('#target-sentence').classList.add('animate-gentle-pulse');
+        setTimeout(() => {
+            document.querySelector('#target-sentence').classList.remove('animate-gentle-pulse');
+        }, 1000);
+    }
+    document.querySelector('#level span').textContent = gameState.level;
+    
+    // Update moves display with minimum moves if applicable
+    const currentLevel = levels[gameState.level - 1];
+    const movesElement = document.querySelector('#moves span');
+    const minMovesElement = document.querySelector('#min-moves');
+    const yourBestElement = document.querySelector('#your-best');
+    const skipLevelButton = document.getElementById('skip-level');
+    
+    const bestMoves = localStorage.getItem(`bestMoves_level${gameState.level}`);
+    
+    if (currentLevel && currentLevel.minMoves > 0) {
+        minMovesElement.classList.remove('hidden');
+        minMovesElement.querySelector('span').textContent = currentLevel.minMoves;
+    } else {
+        minMovesElement.classList.remove('hidden');
+        minMovesElement.querySelector('span').textContent = '?';
+    }
+    
+    if (bestMoves) {
+        yourBestElement.classList.remove('hidden');
+        yourBestElement.querySelector('span').textContent = bestMoves;
+    } else {
+        yourBestElement.classList.add('hidden');
+    }
+    movesElement.textContent = gameState.moves;
+
+    // Make both numbers green if they are the same
+    if (currentLevel && bestMoves && currentLevel.minMoves == bestMoves) {
+        minMovesElement.querySelector('span').classList.add('text-green-500', 'font-bold');
+        yourBestElement.querySelector('span').classList.add('text-green-500', 'font-bold');
+    } else {
+        minMovesElement.querySelector('span').classList.remove('text-green-500', 'font-bold');
+        yourBestElement.querySelector('span').classList.remove('text-green-500', 'font-bold');
+    }
+
+    // Show or hide Skip Level button
+    if (gameState.completedLevels.includes(gameState.level)) {
+        skipLevelButton.classList.remove('hidden');
+    } else {
+        skipLevelButton.classList.add('hidden');
+    }
+}
+
+function highlightCorrectWords(sentence) {
+    const words = sentence.split(' ');
+    const correctPositions = findCorrectWordPositions();
+    return words.map((word, index) => 
+        correctPositions.includes(index) 
+            ? `<span class="text-green-500 font-bold">${word}</span>` 
+            : word
+    ).join(' ');
+}
+
+function findCorrectWordPositions() {
+    const { gridSize, wordPositions, words, targetSentence } = gameState;
+    const targetWords = targetSentence.split(' ');
+    const correctPositions = new Set();
+
+    const directions = [
+        { dx: 1, dy: 0 },  // right
+        { dx: 0, dy: 1 },  // down
+        { dx: -1, dy: 0 }, // left
+        { dx: 0, dy: -1 }  // up
+    ];
+
+    // Find the first word of the sentence
+    const firstWordIndex = wordPositions.findIndex(pos => words[wordPositions.indexOf(pos)] === targetWords[0]);
+    if (firstWordIndex === -1) return [];
+
+    const startPos = wordPositions[firstWordIndex];
+
+    for (const direction of directions) {
+        let x = startPos.col;
+        let y = startPos.row;
+        
+        // Check if there's enough space in this direction
+        let spaceAvailable = true;
+        for (let i = 0; i < targetWords.length; i++) {
+            if (x < 0 || x >= gridSize.cols || y < 0 || y >= gridSize.rows) {
+                spaceAvailable = false;
+                break;
+            }
+            x += direction.dx;
+            y += direction.dy;
+        }
+        
+        if (!spaceAvailable) continue;
+
+        // Reset position and check words
+        x = startPos.col;
+        y = startPos.row;
+        let matchedWords = [];
+
+        for (let i = 0; i < targetWords.length; i++) {
+            const wordIndex = wordPositions.findIndex(pos => pos.row === y && pos.col === x);
+            if (wordIndex !== -1 && words[wordIndex] === targetWords[i]) {
+                matchedWords.push(wordIndex);
+            }
+            x += direction.dx;
+            y += direction.dy;
+        }
+
+        matchedWords.forEach(index => correctPositions.add(index));
+    }
+
+    return Array.from(correctPositions);
+}
+
+function updateTimerDisplay() {
+    document.querySelector('#timer span').textContent = formatTime(gameState.timer);
+}
+
+function updateMovesDisplay() {
+    document.querySelector('#moves span').textContent = gameState.moves;
+}
+
+function createGameBoard() {
+    const { gridSize, walls } = gameState;
+    const gameBoard = document.getElementById('game-board');
+    const fragment = document.createDocumentFragment();
+    gameBoard.style.gridTemplateColumns = `repeat(${gridSize.cols}, minmax(40px, 1fr))`;
+
+    for (let row = 0; row < gridSize.rows; row++) {
+        for (let col = 0; col < gridSize.cols; col++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.classList.add(walls.some(wall => wall.row === row && wall.col === col) ? 'wall' : 'empty');
+            fragment.appendChild(cell);
+        }
+    }
+
+    gameBoard.innerHTML = '';
+    gameBoard.appendChild(fragment);
+    updateGameBoard();
+
+    // Remove click event listener and rely on touch events for mobile
+    gameBoard.removeEventListener('click', handleCellClick);
+}
+
+function updateGameBoard() {
+    const { gridSize, wordPositions, words, walls, selectedWordIndex, selectionRectangle } = gameState;
+    const gameBoard = document.getElementById('game-board');
+    const cells = gameBoard.children;
+
+    for (let i = 0; i < cells.length; i++) {
+        const row = Math.floor(i / gridSize.cols);
+        const col = i % gridSize.cols;
+        const cell = cells[i];
+        const wordIndex = wordPositions.findIndex(pos => pos.row === row && pos.col === col);
+        
+        cell.textContent = wordIndex !== -1 ? words[wordIndex] : '';
+        cell.className = 'cell';
+        
+        if (walls.some(wall => wall.row === row && wall.col === col)) {
+            cell.classList.add('wall');
+        } else if (wordIndex !== -1) {
+            cell.classList.add('word', wordColors[wordIndex % wordColors.length]);
+            if (wordIndex === selectedWordIndex) {
+                cell.classList.add('selected-word');
+            }
+        } else {
+            cell.classList.add('empty');
+        }
+
+        // Draw selection rectangle
+        if (row === selectionRectangle.row && col === selectionRectangle.col) {
+            const selectionRect = cell.querySelector('.selection-rectangle') || document.createElement('div');
+            selectionRect.className = 'selection-rectangle';
+            cell.appendChild(selectionRect);
+        } else {
+            const existingRect = cell.querySelector('.selection-rectangle');
+            if (existingRect) {
+                cell.removeChild(existingRect);
+            }
+        }
+
+        // Animate selected word
+        if (wordIndex === selectedWordIndex) {
+            cell.classList.add('animate-gentle-pulse');
+        } else {
+            cell.classList.remove('animate-gentle-pulse');
+        }
+    }
+}
+
+// Game Logic Functions
+function startTimer() {
+    if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+    }
+    gameState.timer = 0; // Start from 0
+    updateTimerDisplay();
+    gameState.timerInterval = setInterval(() => {
+        gameState.timer++;
+        updateTimerDisplay();
+    }, TIMER_INTERVAL);
+}
+
+function stopTimer() {
+    if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+        gameState.timerInterval = null;
+    }
+}
+
+function toggleWordSelection(index) {
+    if (gameState.selectedWordIndex === index) {
+        gameState.selectedWordIndex = null;
+    } else {
+        gameState.selectedWordIndex = index;
+    }
+    updateGameBoard();
+}
+
+function moveSelectedWord(direction) {
+    try {
+        if (gameState.selectedWordIndex === null) return;
+        if (!['up', 'down', 'left', 'right'].includes(direction)) {
+            throw new Error(`Invalid direction: ${direction}`);
+        }
+
+        const { wordPositions, selectedWordIndex } = gameState;
+        if (selectedWordIndex < 0 || selectedWordIndex >= wordPositions.length) {
+            throw new Error(`Invalid selectedWordIndex: ${selectedWordIndex}`);
+        }
+
+        const currentPosition = wordPositions[selectedWordIndex];
+        let newPosition = { ...currentPosition };
+
+        let moveCount = 0;
+        const maxMoves = Math.max(gameState.gridSize.rows, gameState.gridSize.cols);
+        while (moveCount < maxMoves) {
+            const nextPosition = getNextPosition(newPosition, direction);
+            if (!isValidMove(nextPosition, selectedWordIndex)) break;
+            newPosition = nextPosition;
+            moveCount++;
+        }
+
+        if (newPosition.row !== currentPosition.row || newPosition.col !== currentPosition.col) {
+            gameState.moves++;
+            updateMovesDisplay();
+            animateWordMovement(selectedWordIndex, currentPosition, newPosition);
+        }
+    } catch (error) {
+        console.error("Error moving selected word:", error);
+        alert("An error occurred while moving the word. Please try again.");
+    }
+}
+
+function animateWordMovement(wordIndex, startPos, endPos) {
+    gameState.isAnimating = true;
+    const { words, gridSize, wordPositions } = gameState;
+    const word = words[wordIndex];
+    const startCell = document.querySelector(`#game-board > div:nth-child(${startPos.row * gridSize.cols + startPos.col + 1})`);
+    const endCell = document.querySelector(`#game-board > div:nth-child(${endPos.row * gridSize.cols + endPos.col + 1})`);
+    
+    const startRect = startCell.getBoundingClientRect();
+    const endRect = endCell.getBoundingClientRect();
+
+    // Create a floating element for smooth animation
+    const floatingWord = document.createElement('div');
+    floatingWord.textContent = word;
+    floatingWord.className = `absolute ${startCell.className} ${wordColors[wordIndex % wordColors.length]}`;
+    floatingWord.style.left = `${startRect.left}px`;
+    floatingWord.style.top = `${startRect.top}px`;
+    floatingWord.style.width = `${startRect.width}px`;
+    floatingWord.style.height = `${startRect.height}px`;
+    document.body.appendChild(floatingWord);
+
+    // Hide the original word
+    startCell.textContent = '';
+
+    // Calculate the path
+    const path = calculatePath(startPos, endPos);
+
+    // Start the animation
+    const startTime = performance.now();
+    const duration = 500; // Animation duration in milliseconds
+
+    function animate(currentTime) {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const easeProgress = easeInOutCubic(progress);
+
+        const currentPathIndex = Math.floor(easeProgress * (path.length - 1));
+        const currentPos = path[currentPathIndex];
+        const currentCell = document.querySelector(`#game-board > div:nth-child(${currentPos.row * gridSize.cols + currentPos.col + 1})`);
+        const currentRect = currentCell.getBoundingClientRect();
+
+        floatingWord.style.left = `${currentRect.left}px`;
+        floatingWord.style.top = `${currentRect.top}px`;
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            // Animation complete
+            document.body.removeChild(floatingWord);
+            endCell.textContent = word;
+
+            // Update game state
+            wordPositions[wordIndex] = endPos;
+            gameState.selectionRectangle = endPos;
+
+            // Update the game board
+            updateGameBoard();
+
+            // Check level completion
+            checkLevelCompletion();
+            gameState.isAnimating = false;
+        }
+    }
+
+    requestAnimationFrame(animate);
+}
+
+function calculatePath(startPos, endPos) {
+    const path = [startPos];
+    let currentPos = {...startPos};
+
+    while (currentPos.row !== endPos.row || currentPos.col !== endPos.col) {
+        if (currentPos.row < endPos.row) {
+            currentPos.row++;
+        } else if (currentPos.row > endPos.row) {
+            currentPos.row--;
+        } else if (currentPos.col < endPos.col) {
+            currentPos.col++;
+        } else if (currentPos.col > endPos.col) {
+            currentPos.col--;
+        }
+        path.push({...currentPos});
+    }
+
+    return path;
+}
+
+// Easing function for smoother animation
+function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function moveSelectionRectangle(direction) {
+    let { row, col } = gameState.selectionRectangle;
+    switch (direction) {
+        case 'up':
+            row = Math.max(0, row - 1);
+            break;
+        case 'down':
+            row = Math.min(gameState.gridSize.rows - 1, row + 1);
+            break;
+        case 'left':
+            col = Math.max(0, col - 1);
+            break;
+        case 'right':
+            col = Math.min(gameState.gridSize.cols - 1, col + 1);
+            break;
+    }
+    gameState.selectionRectangle = { row, col };
+    updateGameBoard();
+}
+
+function toggleWordSelection() {
+    const { row, col } = gameState.selectionRectangle;
+    const wordIndex = gameState.wordPositions.findIndex(pos => pos.row === row && pos.col === col);
+    if (wordIndex !== -1) {
+        if (isDesktopMode) {
+            if (gameState.selectedWordIndex === wordIndex) {
+                gameState.selectedWordIndex = null;
+                playVerySoftDeselectionSound(); // Play the deselection sound
+            } else {
+                gameState.selectedWordIndex = wordIndex;
+                playVerySoftSelectionSound(); // Play the selection sound
+            }
+        } else {
+            // On mobile, always select the word
+            gameState.selectedWordIndex = wordIndex;
+            playVerySoftSelectionSound(); // Play the selection sound
+        }
+        updateGameBoard();
+    }
+}
+
+
+
+function checkLevelCompletion() {
+    const { gridSize, wordPositions, words, targetSentence } = gameState;
+    
+    // Check horizontal arrangement
+    for (let row = 0; row < gridSize.rows; row++) {
+        let rowWords = [];
+        for (let col = 0; col < gridSize.cols; col++) {
+            const wordIndex = wordPositions.findIndex(pos => pos.row === row && pos.col === col);
+            if (wordIndex !== -1) {
+                rowWords.push(words[wordIndex]);
+            } else if (rowWords.length > 0) {
+                break;
+            }
+        }
+        const arrangedSentence = rowWords.join(' ');
+        if (arrangedSentence === targetSentence || arrangedSentence === targetSentence.split(' ').reverse().join(' ')) {
+            document.querySelector('#target-sentence span').innerHTML = `<span class="text-green-500 font-bold">${targetSentence}</span>`;
+            completeLevel();
+            return;
+        }
+    }
+
+    // Check vertical arrangement
+    for (let col = 0; col < gridSize.cols; col++) {
+        let colWords = [];
+        for (let row = 0; row < gridSize.rows; row++) {
+            const wordIndex = wordPositions.findIndex(pos => pos.row === row && pos.col === col);
+            if (wordIndex !== -1) {
+                colWords.push(words[wordIndex]);
+            } else if (colWords.length > 0) {
+                break;
+            }
+        }
+        const arrangedSentence = colWords.join(' ');
+        if (arrangedSentence === targetSentence || arrangedSentence === targetSentence.split(' ').reverse().join(' ')) {
+            highlightCorrectWords(targetSentence);
+            requestAnimationFrame(() => {
+                completeLevel();
+            });
+            return;
+        }
+    }
+
+    // Update the target sentence display
+    updateGameInfo();
+}
+
+function completeLevel() {
+    stopTimer();
+
+    // Highlight all words
+    gameState.wordPositions.forEach((_, index) => {
+        gameState.selectedWordIndex = index;
+        updateGameBoard();
+    });
+
+    // Save player's best moves
+    const bestMoves = localStorage.getItem(`bestMoves_level${gameState.level}`);
+    if (!bestMoves || gameState.moves < parseInt(bestMoves)) {
+        localStorage.setItem(`bestMoves_level${gameState.level}`, gameState.moves.toString());
+    }
+
+    // Mark level as completed
+    if (!gameState.completedLevels.includes(gameState.level)) {
+        gameState.completedLevels.push(gameState.level);
+        localStorage.setItem('completedLevels', JSON.stringify(gameState.completedLevels));
+    }
+
+    if (gameState.level === levels.length) {
+        showGameCompletionAnimation();
+    } else {
+        showLevelCompletionAnimation();
+    }
+}
+
+function showLevelCompletionAnimation() {
+    const animationContainer = document.createElement('div');
+    animationContainer.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+    
+    let content = `
+        <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 class="text-4xl font-bold mb-4 text-blue-600">${gameState.level === 0 ? 'Tutorial' : 'Level ' + gameState.level} Completed!</h2>`;
+    
+    if (gameState.level > 0) {
+        const currentLevel = levels[gameState.level - 1];
+        const bestMoves = localStorage.getItem(`bestMoves_level${gameState.level}`);
+        const isMinimum = currentLevel.minMoves > 0 && gameState.moves === currentLevel.minMoves;
+        const isBest = !bestMoves || gameState.moves <= parseInt(bestMoves);
+        const greenClass = isMinimum ? 'text-green-500 font-bold' : '';
+
+        content += `
+            <p class="text-xl mb-2">Time Taken: ${formatTime(gameState.timer)}</p>
+            <p class="text-xl mb-2">Moves: ${gameState.moves} ${isMinimum ? '<span class="text-green-500 font-bold">(Minimum!)</span>' : ''}</p>
+            <p class="text-xl mb-2 ${greenClass}">Minimum Moves: ${currentLevel.minMoves > 0 ? currentLevel.minMoves : '?'}</p>
+            <p class="text-xl mb-2 ${isBest ? 'text-blue-500 font-bold' : ''}">Your Best: ${isBest ? gameState.moves : bestMoves}</p>
+            ${isMinimum ? '<p class="text-xl mb-2 text-green-500 font-bold">Congratulations! You achieved the minimum moves!</p>' : ''}
+            ${isBest ? '<p class="text-xl mb-2 text-blue-500 font-bold">New personal best!</p>' : ''}`
+    }
+    
+    content += `            <button id="try-again" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2">
+                Try Again
+            </button>
+            <button id="next-level" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                ${gameState.level === 0 ? 'Start Game' : 'Next Level'}
+            </button>
+        </div>`;
+    
+    animationContainer.innerHTML = content;
+    
+    document.body.appendChild(animationContainer);
+    
+    // Add confetti animation
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+    
+    const nextLevelButton = document.getElementById('next-level');
+    nextLevelButton.focus();
+    
+    const handleNextLevel = () => {
+        document.body.removeChild(animationContainer);
+        if (gameState.level === 0) {
+            // Reset game state after tutorial
+            gameState.level = 1;
+            gameState.moves = 0;
+            gameState.timer = INITIAL_TIMER;
+            gameState.words = [];
+            gameState.gridSize = GRID_SIZE;
+            gameState.wordPositions = [];
+            gameState.walls = [];
+            gameState.selectedWordIndex = null;
+            gameState.selectionRectangle = { row: 0, col: 0 };
+            gameState.rng = null;
+            gameState.isDemo = false;
+
+            // Remove any tutorial messages
+            const tutorialMessages = document.querySelectorAll('.fixed.bg-white.text-black.p-4.rounded-lg.shadow-lg.z-50');
+            tutorialMessages.forEach(message => message.remove());
+        } else {
+            gameState.level++;
+        }
+        initGame();
+    };
+
+    nextLevelButton.addEventListener('click', handleNextLevel);
+    nextLevelButton.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleNextLevel();
+    });
+
+    const tryAgainButton = document.getElementById('try-again');
+    tryAgainButton.addEventListener('click', () => {
+        document.body.removeChild(animationContainer);
+        restartLevel();
+    });
+    tryAgainButton.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        document.body.removeChild(animationContainer);
+        restartLevel();
+    });
+    
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleNextLevel();
+        } else if (event.key === 'r' || event.key === 'R') {
+            event.preventDefault();
+            document.body.removeChild(animationContainer);
+            restartLevel();
+        }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    
+    animationContainer.addEventListener('remove', () => {
+        document.removeEventListener('keydown', handleKeyDown);
+    });
+}
+
+function showGameCompletionAnimation() {
+    const animationContainer = document.createElement('div');
+    animationContainer.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
+    animationContainer.innerHTML = `
+        <div class="bg-white p-8 rounded-lg shadow-lg text-center">
+            <h2 class="text-4xl font-bold mb-4 text-blue-600">Congratulations!</h2>
+            <p class="text-2xl mb-4">You've completed all levels!</p>
+           
+            <button id="restart-game" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Play Again
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(animationContainer);
+    
+    // Add confetti animation
+    const duration = 15 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+        confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+    }, 250);
+    
+    document.getElementById('restart-game').addEventListener('click', () => {
+        document.body.removeChild(animationContainer);
+        clearInterval(interval);
+        gameState.level = 1;
+       
+        initGame();
+    });
+}
+
+// Event Handlers
+function handleCellClick(event) {
+   
+    event.preventDefault(); // Prevent default behavior
+    const cell = event.target.closest('.cell');
+  
+    if (cell) {
+      
+        const gameBoard = document.getElementById('game-board');
+        const index = Array.from(gameBoard.children).indexOf(cell);
+        const row = Math.floor(index / gameState.gridSize.cols);
+        const col = index % gameState.gridSize.cols;
+     
+        const wordIndex = gameState.wordPositions.findIndex(pos => pos.row === row && pos.col === col);
+      
+        
+        if (wordIndex !== -1) {
+        
+            gameState.selectionRectangle = { row, col };
+       
+            if (gameState.selectedWordIndex === wordIndex) {
+                gameState.selectedWordIndex = null;
+             
+                playVerySoftDeselectionSound();
+            } else {
+                gameState.selectedWordIndex = wordIndex;
+             
+                playVerySoftSelectionSound();
+            }
+            updateGameBoard();
+        } else {
+       
+        }
+    }
+}
+
+
+function handleKeyDown(event) {
+    try {
+        if (!event || !event.key) {
+            throw new Error('Invalid event object');
+        }
+
+        const key = event.key.toLowerCase();
+        let action = null;
+
+        if (KEY_MAPPINGS.UP.map(k => k.toLowerCase()).includes(key)) {
+            action = 'up';
+        } else if (KEY_MAPPINGS.DOWN.map(k => k.toLowerCase()).includes(key)) {
+            action = 'down';
+        } else if (KEY_MAPPINGS.LEFT.map(k => k.toLowerCase()).includes(key)) {
+            action = 'left';
+        } else if (KEY_MAPPINGS.RIGHT.map(k => k.toLowerCase()).includes(key)) {
+            action = 'right';
+        }
+
+        if (action) {
+            if (gameState.selectedWordIndex !== null) {
+                moveSelectedWordImmediate(action);
+            } else {
+                moveSelectionRectangle(action);
+            }
+        } else if (KEY_MAPPINGS.SELECT.map(k => k.toLowerCase()).includes(key)) {
+            toggleWordSelection();
+        } else if (KEY_MAPPINGS.RESTART.map(k => k.toLowerCase()).includes(key)) {
+            resetGameState();
+            initGame();
+        } else if (KEY_MAPPINGS.NEXT_LEVEL.map(k => k.toLowerCase()).includes(key)) {
+            gameState.level = (gameState.level % levels.length) + 1;
+            initGame();
+        }
+    } catch (error) {
+        console.error("Error handling key down event:", error);
+    }
+}
+
+function moveSelectedWordImmediate(direction) {
+    if (gameState.selectedWordIndex === null) return;
+
+    const { wordPositions, selectedWordIndex } = gameState;
+    const currentPosition = wordPositions[selectedWordIndex];
+    let newPosition = { ...currentPosition };
+
+    while (true) {
+        const nextPosition = getNextPosition(newPosition, direction);
+        if (!isValidMove(nextPosition, selectedWordIndex)) break;
+        newPosition = nextPosition;
+    }
+
+    if (newPosition.row !== currentPosition.row || newPosition.col !== currentPosition.col) {
+        gameState.moves++;
+        updateMovesDisplay();
+        wordPositions[selectedWordIndex] = newPosition;
+        gameState.selectionRectangle = newPosition;
+        updateGameBoard();
+        checkLevelCompletion();
+    }
+}
+
+function resetGameState() {
+    gameState.timer = INITIAL_TIMER;
+    gameState.moves = 0;
+    gameState.selectedWordIndex = null;
+    gameState.selectionRectangle = { row: 0, col: 0 };
+    stopTimer();
+}
+
+function restartLevel() {
+    resetGameState();
+    initGame();
+}
+
+function isWordCell(touch) {
+    const gameBoard = document.getElementById('game-board');
+    const cells = gameBoard.children;
+    const touchX = touch.clientX;
+    const touchY = touch.clientY;
+
+    for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        const cellRect = cell.getBoundingClientRect();
+
+        if (touchX >= cellRect.left && touchX <= cellRect.right &&
+            touchY >= cellRect.top && touchY <= cellRect.bottom) {
+            if (cell.textContent.trim() !== '') {
+                return { 
+                    row: Math.floor(i / gameState.gridSize.cols), 
+                    col: i % gameState.gridSize.cols
+                };
+            }
+        }
+    }
+    return null;
+}
+
+function handleTouchStart(event) {
+    event.preventDefault();
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+    const touch = event.touches[0];
+    
+    const wordPosition = isWordCell(touch);
+    if (wordPosition) {
+        gameState.selectionRectangle = wordPosition;
+        const wordIndex = gameState.wordPositions.findIndex(pos => pos.row === wordPosition.row && pos.col === wordPosition.col);
+        if (wordIndex !== -1) {
+            gameState.selectedWordIndex = wordIndex;
+            playVerySoftSelectionSound();
+        }
+        updateGameBoard();
+    }
+}
+
+function handleTouchMove(event) {
+    event.preventDefault();
+    if (gameState.selectedWordIndex === null) {
+        return;
+    }
+
+    const touchEndX = event.touches[0].clientX;
+    const touchEndY = event.touches[0].clientY;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD || Math.abs(deltaY) > SWIPE_THRESHOLD) {
+        let direction;
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            direction = deltaX > 0 ? 'right' : 'left';
+        } else {
+            direction = deltaY > 0 ? 'down' : 'up';
+        }
+        moveSelectedWordImmediate(direction);
+        touchStartX = touchEndX;
+        touchStartY = touchEndY;
+    }
+}
+
+function handleTouchEnd(event) {
+    event.preventDefault();
+    touchStartX = 0;
+    touchStartY = 0;
+}
+
+// Event Listeners
+window.addEventListener('load', () => {
+    detectGameMode();
+    showIntroScreen();
+});
+
+function addEventListeners() {
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    const gameBoard = document.getElementById('game-board');
+    if (gameBoard) {
+        gameBoard.removeEventListener('click', handleCellClick); // Remove existing listener if any
+        gameBoard.addEventListener('click', handleCellClick);
+
+        gameBoard.addEventListener('click', function(event) {
+
+            handleCellClick(event);
+        });
+        
+        // Add touch event listeners to the game board
+        gameBoard.addEventListener('touchstart', handleTouchStart, { passive: false });
+        gameBoard.addEventListener('touchmove', handleTouchMove, { passive: false });
+        gameBoard.addEventListener('touchend', handleTouchEnd, { passive: false });
+    } else {
+        console.error('Game board element not found');
+    }
+
+    // Add event listener for Skip Level button
+    const skipLevelButton = document.getElementById('skip-level');
+    skipLevelButton.addEventListener('click', handleSkipLevel);
+    skipLevelButton.addEventListener('touchend', handleSkipLevel);
+}
+
+
+
+function removeEventListeners() {
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('touchstart', handleTouchStart);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleTouchEnd);
+    document.getElementById('game-board').removeEventListener('click', handleCellClick);
+}
+
+function showIntroScreen() {
+    document.getElementById('intro-screen').classList.remove('hidden');
+    document.getElementById('game-container').classList.add('hidden');
+    removeEventListeners();
+}
+
+function startGame(isDemo = false) {
+
+    document.getElementById('intro-screen').classList.add('hidden');
+    document.getElementById('game-container').classList.remove('hidden');
+    addEventListeners();
+    initGame(isDemo);
+
+}
+
+document.getElementById('start-game').addEventListener('click', () => {
+
+    startGame(false);
+});
+document.getElementById('start-demo').addEventListener('click', () => {
+
+    startGame(true);
+});
+
+document.getElementById('restart-level').addEventListener('click', handleRestartLevel);
+document.getElementById('restart-level').addEventListener('touchend', handleRestartLevel);
+
+function handleRestartLevel(event) {
+    event.preventDefault();
+
+    restartLevel();
+}
+
+function handleSkipLevel(event) {
+    event.preventDefault();
+
+    gameState.level = (gameState.level % levels.length) + 1;
+    initGame();
+}
+
+
+// Add event listener for Enter or Space key on the intro screen (desktop mode only)
+if (isDesktopMode) {
+    document.addEventListener('keydown', function(event) {
+        if ((event.key === 'Enter' || event.key === ' ') && !document.getElementById('intro-screen').classList.contains('hidden')) {
+            startGame(false);
+        }
+    });
+}
+
+
+// Constants
+const directionMap = {
+    'up': { row: -1, col: 0 },
+    'down': { row: 1, col: 0 },
+    'left': { row: 0, col: -1 },
+    'right': { row: 0, col: 1 }
+};
+
+// Initialize selection rectangle position
+gameState.selectionRectangle = { row: 0, col: 0 };
+
+// Touch event variables
+let touchStartX = 0;
+let touchStartY = 0;
+</script>
+</body>
+</html>
