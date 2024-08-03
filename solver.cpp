@@ -336,10 +336,21 @@ void solve_level(const GameState& level_data) {
 }
 
 
-int main() {
+int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
+
+    if (argc > 1) {
+        csv_file = "import2";
+        grid_size = {10, 10};
+    }
+
     auto levels = load_level_data(csv_file);
+
+    // Update grid size for all levels
+    for (auto& level : levels) {
+        level->grid_size = grid_size;
+    }
 
     // Use std::async to run solve_level in parallel for each level
     std::vector<std::future<void>> futures;
