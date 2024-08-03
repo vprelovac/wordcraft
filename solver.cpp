@@ -714,6 +714,7 @@ int main(int argc, char* argv[]) {
                 for (const auto& move : result.solution) {
                     std::cout << "(" << level_data->words[move.first] << ", " << move.second << ") ";
                 }
+                std::cout << "\nSolution length: " << result.solution.size();
                 std::cout << "\nPaths traversed: " << result.paths_traversed << std::endl;
             } else {
                 solve_level(*level_data, algorithm_choice);
