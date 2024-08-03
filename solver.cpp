@@ -245,9 +245,101 @@ int goal_count_heuristic(const GameState& state, const GameState& goal_state) {
     return state.word_positions.size() - count;
 }
 
+// Number of Realizable Generalized Paths (NRP) heuristic
+int nrp_heuristic(const GameState& state, const GameState& goal_state) {
+    int count = 0;
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        bool has_path = false;
+        for (const auto& goal_pos : goal_state.word_positions) {
+            if (has_realizable_path(state.word_positions[i], goal_pos, state)) {
+                has_path = true;
+                break;
+            }
+        }
+        if (has_path) {
+            count++;
+        }
+    }
+    return state.word_positions.size() - count;
+}
+
+// Linear Conflict heuristic
+int linear_conflict_heuristic(const GameState& state, const GameState& goal_state) {
+    int conflicts = 0;
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        for (size_t j = i + 1; j < state.word_positions.size(); ++j) {
+            if (state.word_positions[i].first == state.word_positions[j].first &&
+                goal_state.word_positions[i].first == goal_state.word_positions[j].first &&
+                (state.word_positions[i].second - state.word_positions[j].second) *
+                    (goal_state.word_positions[i].second - goal_state.word_positions[j].second) < 0) {
+                conflicts += 2;
+            } else if (state.word_positions[i].second == state.word_positions[j].second &&
+                       goal_state.word_positions[i].second == goal_state.word_positions[j].second &&
+                       (state.word_positions[i].first - state.word_positions[j].first) *
+                           (goal_state.word_positions[i].first - goal_state.word_positions[j].first) < 0) {
+                conflicts += 2;
+            }
+        }
+    }
+    return conflicts;
+}
+
+// Manhattan Distance with Sliding heuristic
+int manhattan_sliding_heuristic(const GameState& state, const GameState& goal_state) {
+    int total_distance = 0;
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        int dx = std::abs(goal_state.word_positions[i].first - state.word_positions[i].first);
+        int dy = std::abs(goal_state.word_positions[i].second - state.word_positions[i].second);
+        total_distance += std::max(dx, dy);
+    }
+    return total_distance;
+}
+
+// Interaction Cost heuristic
+int interaction_cost_heuristic(const GameState& state, const GameState& goal_state) {
+    int cost = 0;
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        for (size_t j = i + 1; j < state.word_positions.size(); ++j) {
+            if (are_interacting(state.word_positions[i], state.word_positions[j],
+                                goal_state.word_positions[i], goal_state.word_positions[j])) {
+                cost++;
+            }
+        }
+    }
+    return cost;
+}
+
+// Helper function for NRP heuristic
+bool has_realizable_path(const Position& start, const Position& goal, const GameState& state) {
+    // Simplified check: consider a path realizable if there are no obstacles in the way
+    int dx = goal.first - start.first;
+    int dy = goal.second - start.second;
+    int steps = std::max(std::abs(dx), std::abs(dy));
+    for (int i = 1; i <= steps; ++i) {
+        int x = start.first + (dx * i) / steps;
+        int y = start.second + (dy * i) / steps;
+        if (state.is_position_occupied({x, y})) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Helper function for Interaction Cost heuristic
+bool are_interacting(const Position& pos1, const Position& pos2, const Position& goal1, const Position& goal2) {
+    return pos1.first == pos2.first || pos1.second == pos2.second;
+}
+
 // Combined heuristic function
 int combined_heuristic(const GameState& state, const GameState& goal_state) {
-    return std::max(standard_heuristic(state, goal_state), goal_count_heuristic(state, goal_state));
+    return std::max({
+        standard_heuristic(state, goal_state),
+        goal_count_heuristic(state, goal_state),
+        nrp_heuristic(state, goal_state),
+        linear_conflict_heuristic(state, goal_state),
+        manhattan_sliding_heuristic(state, goal_state),
+        interaction_cost_heuristic(state, goal_state)
+    });
 }
 
 // A* algorithm implementation
