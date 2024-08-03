@@ -308,9 +308,12 @@ function initGame(isDemo = false) {
         }
         
         // Load completed levels from local storage
-        const completedLevels = localStorage.getItem('completedLevels');
+        const modePrefix = isHardMode ? 'hard_' : 'easy_';
+        const completedLevels = localStorage.getItem(`${modePrefix}completedLevels`);
         if (completedLevels) {
             gameState.completedLevels = JSON.parse(completedLevels);
+        } else {
+            gameState.completedLevels = [];
         }
         // Debug information
         // Debug information in CSV format
@@ -1200,15 +1203,16 @@ function completeLevel() {
     });
 
     // Save player's best moves
-    const bestMoves = localStorage.getItem(`bestMoves_level${gameState.level}`);
+    const modePrefix = isHardMode ? 'hard_' : 'easy_';
+    const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
     if (!bestMoves || gameState.moves < parseInt(bestMoves)) {
-        localStorage.setItem(`bestMoves_level${gameState.level}`, gameState.moves.toString());
+        localStorage.setItem(`${modePrefix}bestMoves_level${gameState.level}`, gameState.moves.toString());
     }
 
     // Mark level as completed
     if (!gameState.completedLevels.includes(gameState.level)) {
         gameState.completedLevels.push(gameState.level);
-        localStorage.setItem('completedLevels', JSON.stringify(gameState.completedLevels));
+        localStorage.setItem(`${modePrefix}completedLevels`, JSON.stringify(gameState.completedLevels));
     }
 
     if (gameState.level === levels.length) {
@@ -1228,7 +1232,8 @@ function showLevelCompletionAnimation() {
     
     if (gameState.level > 0) {
         const currentLevel = levels[gameState.level - 1];
-        const bestMoves = localStorage.getItem(`bestMoves_level${gameState.level}`);
+        const modePrefix = isHardMode ? 'hard_' : 'easy_';
+        const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
         const isMinimum = currentLevel.minMoves > 0 && gameState.moves === currentLevel.minMoves;
         const isBest = !bestMoves || gameState.moves <= parseInt(bestMoves);
         const greenClass = isMinimum ? 'text-green-500 font-bold' : '';
