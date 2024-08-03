@@ -385,7 +385,7 @@ SolveResult solve_game_hybrid(const GameState& initial_state) {
         if (paths_traversed % 100000 == 0) {
             std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed 
                       << " (Using " << (using_astar ? "A*" : "BFS") << "), BFS queue: " << bfs_queue.size() 
-                      << ", A* queue: " << astar_queue.size() << std::endl;
+                      << ", A* queue: " << astar_queue.size() << ", BFS depth: " << bfs_depth << std::endl;
         }
 
         if (std::find(goal_states.begin(), goal_states.end(), current.state) != goal_states.end()) {
