@@ -697,14 +697,33 @@ int main(int argc, char* argv[]) {
     if (sequential_solve) {
         // Solve levels sequentially
         for (const auto& level_data : levels) {
-            solve_level(*level_data, algorithm_choice);
+            if (algorithm_choice == 3) {
+                auto result = solve_level_hybrid(*level_data);
+                std::cout << "Hybrid solution for Level " << level_data->level << ": ";
+                for (const auto& move : result.solution) {
+                    std::cout << "(" << level_data->words[move.first] << ", " << move.second << ") ";
+                }
+                std::cout << "\nPaths traversed: " << result.paths_traversed << std::endl;
+            } else {
+                solve_level(*level_data, algorithm_choice);
+            }
         }
     } else {
         // Use std::async to run solve_level in parallel for each level
         std::vector<std::future<void>> futures;
         for (const auto& level_data : levels) {
             futures.push_back(std::async(std::launch::async, [&level_data, algorithm_choice]() {
-                solve_level(*level_data, algorithm_choice);
+                if (algorithm_choice == 3) {
+                    auto result = solve_level_hybrid(*level_data);
+                    std::lock_guard<std::mutex> lock(cout_mutex);
+                    std::cout << "Hybrid solution for Level " << level_data->level << ": ";
+                    for (const auto& move : result.solution) {
+                        std::cout << "(" << level_data->words[move.first] << ", " << move.second << ") ";
+                    }
+                    std::cout << "\nPaths traversed: " << result.paths_traversed << std::endl;
+                } else {
+                    solve_level(*level_data, algorithm_choice);
+                }
             }));
         }
 
