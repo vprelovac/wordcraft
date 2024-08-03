@@ -182,6 +182,30 @@ int calculate_possible_positions(const GameState& state) { // Calculate the numb
     std::cout << "Grid size: " << state.grid_size.row << "x" << state.grid_size.col << std::endl;
     std::cout << "Sentence length: " << sentence_length << std::endl;
 
+    // Create a 2D vector to represent the grid
+    std::vector<std::vector<char>> grid(state.grid_size.row, std::vector<char>(state.grid_size.col, '.'));
+
+    // Mark walls with '#'
+    for (const auto& wall : state.walls) {
+        grid[wall.row][wall.col] = '#';
+    }
+
+    // Mark words with numbers
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        const auto& pos = state.word_positions[i];
+        grid[pos.row][pos.col] = '0' + i;
+    }
+
+    // Print the grid
+    std::cout << "Grid layout:" << std::endl;
+    for (const auto& row : grid) {
+        for (char cell : row) {
+            std::cout << cell << ' ';
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
+
     // Check horizontal positions for validity
     for (int row = 0; row < state.grid_size.row; ++row) {
         for (int col = 0; col <= state.grid_size.col - sentence_length; ++col) {
