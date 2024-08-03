@@ -437,7 +437,7 @@ void solve_level(const GameState& level_data, bool use_astar) {
     if (!solution.empty()) {
         std::cout << "Solution for Level " << level_data.level << " (" << (use_astar ? "A*" : "BFS") << "): ";
         for (const auto& move : solution) {
-            std::cout << "(" << move.first << ", " << move.second << ") ";
+            std::cout << "(" << level_data.words[move.first] << ", " << move.second << ") ";
         }
         std::cout << std::endl;
         std::cout << "Minimum moves for Level " << level_data.level << ": " << solution.size() << std::endl;
