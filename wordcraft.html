@@ -1284,7 +1284,7 @@ function showLevelCompletionAnimation() {
     
     let content = `
         <div class="bg-white p-8 rounded-lg shadow-lg text-center">
-            <h2 class="text-4xl font-bold mb-4 text-blue-600">${gameState.level === 0 ? 'Tutorial' : 'Level ' + gameState.level} Completed!</h2>`;
+            <h2 class="text-4xl font-bold mb-4 text-blue-600">${gameState.level === 0 ? 'Tutorial' : 'Level ' + gameState.level + (isHardMode ? ' (Hard)' : '')} Completed!</h2>`;
     
     if (gameState.level > 0) {
         const currentLevel = levels[gameState.level - 1];
