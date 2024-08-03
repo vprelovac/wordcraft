@@ -203,6 +203,14 @@ struct GameState { // Represents the state of the game at any point
 #include <unordered_map>
 #include <limits>
 #include <random>
+#include <chrono>
+
+struct BenchmarkResult {
+    std::chrono::duration<double> original_time;
+    std::chrono::duration<double> precalculated_time;
+    int paths_traversed;
+    std::vector<std::pair<int, std::string>> solution;
+};
 
 // Forward declarations
 bool has_realizable_path(const Position& start, const Position& goal, const GameState& state);
