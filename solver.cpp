@@ -12,6 +12,7 @@
 #include <queue>
 #include <functional>
 #include <condition_variable>
+#include <memory>
 
 const int MAX_PATH_LENGTH = 59; // Maximum allowed path length to avoid infinite loops
 const int MAX_PATHS_TRAVERSED = 10000000; // Maximum number of paths to traverse to avoid excessive computation
@@ -30,12 +31,12 @@ struct GameState { // Represents the state of the game at any point
 
     std::string reversed_target_sentence; // Target sentence in reverse order
 
-    GameState(int lvl, const std::string& sentence, const std::vector<Position>& word_pos, const std::vector<Position>& wall_pos, const Position& grid_sz)
-        : level(lvl), target_sentence(sentence), word_positions(word_pos), walls(wall_pos), grid_size(grid_sz), reversed_target_sentence(reverse_sentence(sentence)) {
-        std::istringstream iss(sentence);
+    GameState(int lvl, std::string sentence, std::vector<Position> word_pos, std::vector<Position> wall_pos, Position grid_sz)
+        : level(lvl), target_sentence(std::move(sentence)), word_positions(std::move(word_pos)), walls(std::move(wall_pos)), grid_size(std::move(grid_sz)), reversed_target_sentence(reverse_sentence(target_sentence)) {
+        std::istringstream iss(target_sentence);
         std::string word;
         while (iss >> word) {
-            words.push_back(word);
+            words.push_back(std::move(word));
         }
     }
 
@@ -195,8 +196,8 @@ const std::array<std::pair<std::string, Position>, 4> DIRECTIONS = {{ // Possibl
     {"right", {0, 1}}
 }};
 
-std::vector<GameState> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
-    std::vector<GameState> levels;
+std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
+    std::vector<std::unique_ptr<GameState>> levels;
     std::ifstream file(csv_file);
     std::string line;
     std::getline(file, line); // Skip the header line
@@ -215,13 +216,13 @@ std::vector<GameState> load_level_data(const std::string& csv_file) { // Load le
         int col = std::stoi(col_str);
 
         if (levels.size() < level) { // Ensure the levels vector is large enough
-            levels.emplace_back(level, sentence, std::vector<Position>(), std::vector<Position>(), Position{8, 8});
+            levels.emplace_back(std::make_unique<GameState>(level, std::move(sentence), std::vector<Position>(), std::vector<Position>(), Position{8, 8}));
         }
 
         if (type.find("Word") != std::string::npos) { // Add word positions
-            levels[level - 1].word_positions.push_back({row, col});
+            levels[level - 1]->word_positions.emplace_back(row, col);
         } else if (type.find("Wall") != std::string::npos) { // Add wall positions
-            levels[level - 1].walls.push_back({row, col});
+            levels[level - 1]->walls.emplace_back(row, col);
         }
     }
 
@@ -391,7 +392,7 @@ int main() {
     // Enqueue tasks for each level
     for (const auto& level_data : levels) {
         pool.enqueue([&level_data]() {
-            solve_level(level_data);
+            solve_level(*level_data);
         });
     }
 
