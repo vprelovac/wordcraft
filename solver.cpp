@@ -324,6 +324,17 @@ SolveResult solve_game_ida_star_beam(const GameState& initial_state) {
     auto start_time = std::chrono::high_resolution_clock::now();
     auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
 
+    struct Node {
+        GameState state;
+        int g_cost;
+        int f_cost;
+        double tie_breaker;
+        std::vector<std::pair<int, std::string>> path;
+
+        Node(GameState s, int g, int f, double tb, std::vector<std::pair<int, std::string>> p)
+            : state(s), g_cost(g), f_cost(f), tie_breaker(tb), path(std::move(p)) {}
+    };
+
     int depth_limit = INITIAL_DEPTH_LIMIT;
     int paths_traversed = 0;
 
