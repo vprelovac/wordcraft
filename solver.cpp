@@ -219,8 +219,8 @@ const std::array<std::pair<std::string, Position>, 4> DIRECTIONS = {{ // Possibl
     {"right", {0, 1}}
 }};
 
-// Heuristic function for A* algorithm
-int heuristic(const GameState& state, const GameState& goal_state) {
+// Standard heuristic function for A* algorithm
+int standard_heuristic(const GameState& state, const GameState& goal_state) {
     int total_distance = 0;
     for (size_t i = 0; i < state.word_positions.size(); ++i) {
         int min_distance = std::numeric_limits<int>::max();
@@ -232,6 +232,22 @@ int heuristic(const GameState& state, const GameState& goal_state) {
         total_distance += min_distance;
     }
     return total_distance;
+}
+
+// Goal state count heuristic
+int goal_count_heuristic(const GameState& state, const GameState& goal_state) {
+    int count = 0;
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        if (std::find(goal_state.word_positions.begin(), goal_state.word_positions.end(), state.word_positions[i]) != goal_state.word_positions.end()) {
+            count++;
+        }
+    }
+    return state.word_positions.size() - count;
+}
+
+// Combined heuristic function
+int combined_heuristic(const GameState& state, const GameState& goal_state) {
+    return std::max(standard_heuristic(state, goal_state), goal_count_heuristic(state, goal_state));
 }
 
 // A* algorithm implementation
@@ -257,7 +273,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const 
 
     auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
     
-    open_list.emplace(initial_state, 0, heuristic(initial_state, goal_states[0]), std::vector<std::pair<int, std::string>>());
+    open_list.emplace(initial_state, 0, combined_heuristic(initial_state, goal_states[0]), std::vector<std::pair<int, std::string>>());
 
     int paths_traversed = 0;
 
@@ -291,7 +307,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const 
                 }
 
                 int new_g_cost = current.g_cost + 1;
-                int new_f_cost = new_g_cost + heuristic(new_state, goal_states[0]);
+                int new_f_cost = new_g_cost + combined_heuristic(new_state, goal_states[0]);
 
                 auto new_path = current.path;
                 new_path.emplace_back(word_index, direction_name);
