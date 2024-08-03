@@ -708,7 +708,7 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    BenchmarkResult result;
+    SolveResult result;
     
     switch (algorithm_choice) {
         case 0:
