@@ -373,7 +373,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
 
     std::queue<Node> bfs_queue;
     std::priority_queue<Node, std::vector<Node>, CompareNode> astar_queue;
-    std::unordered_set<std::vector<Position>, VectorPositionHash> closed_list;
+    std::unordered_map<std::vector<Position>, int, VectorPositionHash> closed_list;
 
     auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
     
