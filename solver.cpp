@@ -616,6 +616,7 @@ SolveResult solve_game_bfs(const GameState& initial_state) {
     }
 
     int paths_traversed = 0;
+    int current_depth = 0;
     auto start_time = std::chrono::steady_clock::now();
     auto last_checkpoint_time = start_time;
 
@@ -626,13 +627,14 @@ SolveResult solve_game_bfs(const GameState& initial_state) {
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_checkpoint_time);
             double speed = 100000.0 / (duration.count() / 1000.0);
             std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed 
-                      << " (Using BFS), Queue size: " << search_queue.size()
+                      << " (Using BFS), BFS depth: " << current_depth
                       << ", Speed: " << std::fixed << std::setprecision(2) << speed << " paths/sec" << std::endl;
             last_checkpoint_time = current_time;
         }
 
         GameState current_state = search_queue.front();
         search_queue.pop();
+        current_depth = visited[current_state.word_positions].size();
 
         if (current_state.is_solved(goal_positions)) {
             auto path = visited[current_state.word_positions];
