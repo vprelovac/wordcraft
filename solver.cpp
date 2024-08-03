@@ -16,7 +16,7 @@
 #include <future>
 #include <iterator>
 
-const int MAX_PATH_LENGTH = 99; // Maximum allowed path length to avoid infinite loops
+const int MAX_PATH_LENGTH = 29; // Maximum allowed path length to avoid infinite loops
 const int MAX_PATHS_TRAVERSED = 20000000; // Maximum number of paths to traverse to avoid excessive computation
 
 std::mutex cout_mutex; // Mutex for thread-safe console output
