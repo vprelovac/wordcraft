@@ -205,9 +205,7 @@ struct GameState { // Represents the state of the game at any point
 #include <random>
 #include <chrono>
 
-struct BenchmarkResult {
-    std::chrono::duration<double> original_time;
-    std::chrono::duration<double> precalculated_time;
+struct SolveResult {
     int paths_traversed;
     std::vector<std::pair<int, std::string>> solution;
 };
@@ -358,7 +356,7 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
 }
 
 // A* algorithm implementation
-BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark) {
+SolveResult solve_game_hybrid(const GameState& initial_state) {
     auto start_time = std::chrono::high_resolution_clock::now();
     struct Node {
         GameState state;
@@ -436,7 +434,7 @@ BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark
             std::cout << std::endl;
             auto end_time = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> total_time = end_time - start_time;
-            return {total_time, std::chrono::duration<double>(0), paths_traversed, current.path};
+            return {paths_traversed, current.path};
         }
 
         closed_list[current.state.word_positions] = current.g_cost;
@@ -498,10 +496,10 @@ BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> total_time = end_time - start_time;
-    return {total_time, std::chrono::duration<double>(0), paths_traversed, {}};
+    return {paths_traversed, {}};
 }
 
-BenchmarkResult solve_game_astar(const GameState& initial_state, bool benchmark) {
+SolveResult solve_game_astar(const GameState& initial_state) {
     auto start_time = std::chrono::high_resolution_clock::now();
     struct Node {
         GameState state;
@@ -556,7 +554,7 @@ BenchmarkResult solve_game_astar(const GameState& initial_state, bool benchmark)
             std::cout << std::endl;
             auto end_time = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> total_time = end_time - start_time;
-            return {total_time, std::chrono::duration<double>(0), paths_traversed, current.path};
+            return {paths_traversed, current.path};
         }
 
         closed_list[current.state.word_positions] = current.g_cost;
@@ -588,7 +586,7 @@ BenchmarkResult solve_game_astar(const GameState& initial_state, bool benchmark)
         }
     }
 
-    return {std::chrono::duration<double>(0), std::chrono::duration<double>(0), paths_traversed, {}};
+    return {paths_traversed, {}};
 }
 
 std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
@@ -625,7 +623,7 @@ std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_f
 }
 
 
-BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = false) {
+SolveResult solve_game(const GameState& initial_state) {
     struct VectorPositionHash {
         std::size_t operator()(const std::vector<Position>& vec) const {
             std::size_t seed = vec.size();
@@ -653,9 +651,6 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
     auto start_time = std::chrono::steady_clock::now();
     auto last_checkpoint_time = start_time;
 
-    std::chrono::duration<double> original_time(0);
-    std::chrono::duration<double> precalculated_time(0);
-
     while (!search_queue.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
         paths_traversed++;
         if (paths_traversed % 100000 == 0) {
@@ -670,26 +665,7 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
         GameState current_state = search_queue.front();
         search_queue.pop();
 
-        if (benchmark) {
-            auto start = std::chrono::high_resolution_clock::now();
-            bool original_result = current_state.is_solved();
-            auto end = std::chrono::high_resolution_clock::now();
-            original_time += end - start;
-
-            start = std::chrono::high_resolution_clock::now();
-            bool precalculated_result = current_state.is_solved_precalculated(goal_positions);
-            end = std::chrono::high_resolution_clock::now();
-            precalculated_time += end - start;
-
-            if (original_result != precalculated_result) {
-                std::cerr << "Error: Inconsistent results between original and precalculated methods" << std::endl;
-            }
-
-            if (original_result) {
-                auto path = visited[current_state.word_positions];
-                return {original_time, precalculated_time, paths_traversed, path};
-            }
-        } else if (current_state.is_solved_precalculated(goal_positions)) {
+        if (current_state.is_solved_precalculated(goal_positions)) {
 //        } else if (current_state.is_solved()) {    
             auto path = visited[current_state.word_positions];
             std::cout << "Solution found: ";
@@ -697,7 +673,7 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
                 std::cout << "(" << move.first << ", " << move.second << ") ";
             }
             std::cout << std::endl;
-            return {original_time, precalculated_time, paths_traversed, path};
+            return {paths_traversed, path};
         }
 
         if (visited[current_state.word_positions].size() >= MAX_PATH_LENGTH) {
@@ -720,10 +696,10 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> total_time = end_time - start_time;
-    return {total_time, std::chrono::duration<double>(0), paths_traversed, {}};
+    return {paths_traversed, {}};
 }
 
-void solve_level(const GameState& level_data, int algorithm_choice, bool benchmark) {
+void solve_level(const GameState& level_data, int algorithm_choice) {
     auto [possible_positions, goal_states] = level_data.calculate_possible_positions_and_goal_states();
     {
         std::lock_guard<std::mutex> lock(cout_mutex);
@@ -736,16 +712,16 @@ void solve_level(const GameState& level_data, int algorithm_choice, bool benchma
     
     switch (algorithm_choice) {
         case 0:
-            result = solve_game(level_data, benchmark);
+            result = solve_game(level_data);
             break;
         case 1:
-            result = solve_game_astar(level_data, benchmark);
+            result = solve_game_astar(level_data);
             break;
         case 2:
-            result = solve_game_hybrid(level_data, benchmark);
+            result = solve_game_hybrid(level_data);
             break;
         default:
-            result = solve_game(level_data, benchmark);
+            result = solve_game(level_data);
     }
     
     auto solution = result.solution;
@@ -764,11 +740,6 @@ void solve_level(const GameState& level_data, int algorithm_choice, bool benchma
         std::cout << "Minimum moves for Level " << level_data.level << ": " << solution.size() << std::endl;
         std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl;
         std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
-        
-        if (benchmark) {
-            std::cout << "Original is_solved time: " << result.original_time.count() << " seconds" << std::endl;
-            std::cout << "Precalculated is_solved time: " << result.precalculated_time.count() << " seconds" << std::endl;
-        }
     } else {
         std::cout << "No solution found for Level " << level_data.level << " (" 
                   << (algorithm_choice == 0 ? "BFS" : (algorithm_choice == 1 ? "A*" : "Hybrid")) << ")" << std::endl;
@@ -782,16 +753,12 @@ int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
     int algorithm_choice = 0; // 0 for BFS, 1 for A*, 2 for Hybrid
-    bool benchmark = false;
-
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "a") {
             algorithm_choice = 1;
         } else if (arg == "h") {
             algorithm_choice = 2;
-        } else if (arg == "b") {
-            benchmark = true;
         } else if (arg == "2") {
             csv_file = "import2";
             grid_size = {10, 10};
@@ -808,8 +775,8 @@ int main(int argc, char* argv[]) {
     // Use std::async to run solve_level in parallel for each level
     std::vector<std::future<void>> futures;
     for (const auto& level_data : levels) {
-        futures.push_back(std::async(std::launch::async, [&level_data, algorithm_choice, benchmark]() {
-            solve_level(*level_data, algorithm_choice, benchmark);
+        futures.push_back(std::async(std::launch::async, [&level_data, algorithm_choice]() {
+            solve_level(*level_data, algorithm_choice);
         }));
     }
 
