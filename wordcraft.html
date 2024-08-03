@@ -379,7 +379,10 @@ function generateLevel(level) {
 
         // Calculate the number of walls based on the level
         const totalCells = gridSize.rows * gridSize.cols;
-        const wallPercentage = level === 0 ? 0.1 : Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE);
+        const wallPercentage = level === 0 ? 0.1 : 
+            isHardMode ? 
+            Math.max(WALL_PERCENTAGE_INITIAL * 0.7 - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE) :
+            Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE);
         const numWalls = Math.floor(totalCells * wallPercentage);
 
         gameState.walls = [];
