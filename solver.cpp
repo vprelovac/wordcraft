@@ -440,7 +440,8 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "a") {
             use_astar = true;
-        } else if (arg == "import2") {
+        }
+        if (arg == "import2") {
             csv_file = "import2";
             grid_size = {10, 10};
         }
