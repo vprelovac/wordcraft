@@ -11,7 +11,7 @@
 #include <mutex>
 #include <iomanip>
 
-const int MAX_PATH_LENGTH = 39; // Maximum allowed path length to avoid infinite loops
+const int MAX_PATH_LENGTH = 59; // Maximum allowed path length to avoid infinite loops
 const int MAX_PATHS_TRAVERSED = 10000000; // Maximum number of paths to traverse to avoid excessive computation
 
 struct Position { // Represents a position in the grid
