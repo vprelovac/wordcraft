@@ -546,6 +546,7 @@ int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
     int algorithm_choice = 0; // 0 for BFS, 1 for A*
+    bool sequential_solve = false; // New flag for sequential solving
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "a")
@@ -554,6 +555,8 @@ int main(int argc, char* argv[]) {
             csv_file = "import2";
             grid_size = {10, 10};
         }
+        else if (arg == "s")
+            sequential_solve = true;
     }
 
     auto levels = load_level_data(csv_file);
@@ -563,17 +566,24 @@ int main(int argc, char* argv[]) {
         level->grid_size = grid_size;
     }
 
-    // Use std::async to run solve_level in parallel for each level
-    std::vector<std::future<void>> futures;
-    for (const auto& level_data : levels) {
-        futures.push_back(std::async(std::launch::async, [&level_data, algorithm_choice]() {
+    if (sequential_solve) {
+        // Solve levels sequentially
+        for (const auto& level_data : levels) {
             solve_level(*level_data, algorithm_choice);
-        }));
-    }
+        }
+    } else {
+        // Use std::async to run solve_level in parallel for each level
+        std::vector<std::future<void>> futures;
+        for (const auto& level_data : levels) {
+            futures.push_back(std::async(std::launch::async, [&level_data, algorithm_choice]() {
+                solve_level(*level_data, algorithm_choice);
+            }));
+        }
 
-    // Wait for all tasks to complete
-    for (auto& future : futures) {
-        future.get();
+        // Wait for all tasks to complete
+        for (auto& future : futures) {
+            future.get();
+        }
     }
 
     return 0;
