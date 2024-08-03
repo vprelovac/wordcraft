@@ -825,7 +825,8 @@ function updateGameInfo() {
     const yourBestElement = document.querySelector('#your-best');
     const skipLevelButton = document.getElementById('skip-level');
     
-    const bestMoves = localStorage.getItem(`bestMoves_level${gameState.level}`);
+    const modePrefix = isHardMode ? 'hard_' : '';
+    const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
     
     if (currentLevel && currentLevel.minMoves > 0) {
         minMovesElement.classList.remove('hidden');
