@@ -170,7 +170,10 @@
     <script>
 // Game constants
 const INITIAL_TIMER = 0; // Start from 0 and count up
-const GRID_SIZE = { rows: 8, cols: 8 };
+const EASY_GRID_SIZE = { rows: 8, cols: 8 };
+const HARD_GRID_SIZE = { rows: 10, cols: 10 };
+let GRID_SIZE = EASY_GRID_SIZE;
+let isHardMode = false;
 const ANIMATION_DURATION = 200; // milliseconds
 const TIME_BONUS_MULTIPLIER = 10;
 const MOVE_PENALTY_MULTIPLIER = 5;
