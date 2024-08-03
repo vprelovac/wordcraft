@@ -828,11 +828,12 @@ function updateGameInfo() {
     const modePrefix = isHardMode ? 'hard_' : '';
     const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
     
+    minMovesElement.classList.remove('hidden');
     if (currentLevel && currentLevel.minMoves > 0) {
-        minMovesElement.classList.remove('hidden');
         minMovesElement.querySelector('span').textContent = currentLevel.minMoves;
+    } else if (currentLevel && currentLevel.knownMinMoves > 0) {
+        minMovesElement.querySelector('span').textContent = currentLevel.knownMinMoves + '?';
     } else {
-        minMovesElement.classList.remove('hidden');
         minMovesElement.querySelector('span').textContent = '?';
     }
     
