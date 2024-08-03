@@ -201,6 +201,10 @@ struct GameState { // Represents the state of the game at any point
 #include <unordered_map>
 #include <limits>
 
+// Forward declarations
+bool has_realizable_path(const Position& start, const Position& goal, const GameState& state);
+bool are_interacting(const Position& pos1, const Position& pos2, const Position& goal1, const Position& goal2);
+
 struct VectorPositionHash {
     std::size_t operator()(const std::vector<Position>& vec) const {
         std::size_t seed = vec.size();
