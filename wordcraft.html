@@ -174,7 +174,7 @@ const MOVE_PENALTY_MULTIPLIER = 5;
 const WALL_PERCENTAGE_INITIAL = 0.3;
 const WALL_PERCENTAGE_DECREASE = 0.02;
 const MIN_WALL_PERCENTAGE = 0.11;
-const TIMER_INTERVAL = 1000; // 1 second
+const TIMER_INTERVAL = 10; // 10 milliseconds for smoother updates
 const LEVEL_COMPLETION_CHECK_DELAY = 50; // milliseconds
 const SWIPE_THRESHOLD = 50; // minimum distance for swipe detection
 
@@ -619,10 +619,12 @@ function mulberry32(a) {
     }
 }
 
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+function formatTime(milliseconds) {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const ms = milliseconds % 1000;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
 function isOutOfBounds({ row, col }, gridSize) {
@@ -921,8 +923,9 @@ function startTimer() {
     }
     gameState.timer = 0; // Start from 0
     updateTimerDisplay();
+    const startTime = Date.now();
     gameState.timerInterval = setInterval(() => {
-        gameState.timer++;
+        gameState.timer = Date.now() - startTime;
         updateTimerDisplay();
     }, TIMER_INTERVAL);
 }
