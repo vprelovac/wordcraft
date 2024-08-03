@@ -185,12 +185,32 @@ struct GameState { // Represents the state of the game at any point
         std::reverse(words.begin(), words.end());
         return join_words(words);
     }
+
+    bool operator==(const GameState& other) const {
+        return level == other.level &&
+               target_sentence == other.target_sentence &&
+               word_positions == other.word_positions &&
+               walls == other.walls &&
+               grid_size == other.grid_size &&
+               words == other.words;
+    }
 };
 
 #include <array>
 #include <queue>
 #include <unordered_map>
 #include <limits>
+
+struct VectorPositionHash {
+    std::size_t operator()(const std::vector<Position>& vec) const {
+        std::size_t seed = vec.size();
+        for (const auto& pos : vec) {
+            seed ^= std::hash<int>()(pos.first) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            seed ^= std::hash<int>()(pos.second) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
+    }
+};
 
 const std::array<std::pair<std::string, Position>, 4> DIRECTIONS = {{ // Possible movement directions
     {"up", {-1, 0}},
