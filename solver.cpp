@@ -610,6 +610,8 @@ SolveResult solve_level_hybrid(const GameState& level_data) {
     
     if (!astar_result.solution.empty() && !ida_result.solution.empty()) {
         std::cout << "Both A* and IDA* found solutions for Level " << level_data.level << std::endl;
+        size_t shorter_length = std::min(astar_result.solution.size(), ida_result.solution.size());
+        std::cout << "Length of shorter solution: " << shorter_length << std::endl;
         if (astar_result.solution.size() <= ida_result.solution.size()) {
             std::cout << "A* solution is shorter or equal. Using A* solution." << std::endl;
             return astar_result;
