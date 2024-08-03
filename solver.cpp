@@ -603,16 +603,25 @@ SolveResult solve_level_hybrid(const GameState& level_data) {
     // If BFS fails, try A* with 1M paths limit
     std::cout << "BFS failed, trying A* for Level " << level_data.level << std::endl;
     auto astar_result = solve_game_astar(level_data, 1000000);
-    if (!astar_result.solution.empty()) {
-        std::cout << "A* found a solution for Level " << level_data.level << std::endl;
-        return astar_result;
-    }
     
-    // If A* fails, try IDA* with 1M paths limit
-    std::cout << "A* failed, trying IDA* for Level " << level_data.level << std::endl;
+    // Always try IDA* with 1M paths limit
+    std::cout << "Trying IDA* for Level " << level_data.level << std::endl;
     auto ida_result = solve_game_ida_star_beam(level_data, 1000000);
-    if (!ida_result.solution.empty()) {
-        std::cout << "IDA* found a solution for Level " << level_data.level << std::endl;
+    
+    if (!astar_result.solution.empty() && !ida_result.solution.empty()) {
+        std::cout << "Both A* and IDA* found solutions for Level " << level_data.level << std::endl;
+        if (astar_result.solution.size() <= ida_result.solution.size()) {
+            std::cout << "A* solution is shorter or equal. Using A* solution." << std::endl;
+            return astar_result;
+        } else {
+            std::cout << "IDA* solution is shorter. Using IDA* solution." << std::endl;
+            return ida_result;
+        }
+    } else if (!astar_result.solution.empty()) {
+        std::cout << "Only A* found a solution for Level " << level_data.level << std::endl;
+        return astar_result;
+    } else if (!ida_result.solution.empty()) {
+        std::cout << "Only IDA* found a solution for Level " << level_data.level << std::endl;
         return ida_result;
     }
     
