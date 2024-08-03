@@ -308,12 +308,18 @@ function initGame(isDemo = false) {
         }
         
         // Load completed levels from local storage
-        const modePrefix = isHardMode ? 'hard_' : 'easy_';
+        const modePrefix = isHardMode ? 'hard_' : '';
         const completedLevels = localStorage.getItem(`${modePrefix}completedLevels`);
         if (completedLevels) {
             gameState.completedLevels = JSON.parse(completedLevels);
         } else {
-            gameState.completedLevels = [];
+            // If no completed levels for hard mode, inherit from easy mode
+            if (isHardMode) {
+                const easyCompletedLevels = localStorage.getItem('completedLevels');
+                gameState.completedLevels = easyCompletedLevels ? JSON.parse(easyCompletedLevels) : [];
+            } else {
+                gameState.completedLevels = [];
+            }
         }
         // Debug information
         // Debug information in CSV format
@@ -1203,7 +1209,7 @@ function completeLevel() {
     });
 
     // Save player's best moves
-    const modePrefix = isHardMode ? 'hard_' : 'easy_';
+    const modePrefix = isHardMode ? 'hard_' : '';
     const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
     if (!bestMoves || gameState.moves < parseInt(bestMoves)) {
         localStorage.setItem(`${modePrefix}bestMoves_level${gameState.level}`, gameState.moves.toString());
@@ -1232,7 +1238,7 @@ function showLevelCompletionAnimation() {
     
     if (gameState.level > 0) {
         const currentLevel = levels[gameState.level - 1];
-        const modePrefix = isHardMode ? 'hard_' : 'easy_';
+        const modePrefix = isHardMode ? 'hard_' : '';
         const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
         const isMinimum = currentLevel.minMoves > 0 && gameState.moves === currentLevel.minMoves;
         const isBest = !bestMoves || gameState.moves <= parseInt(bestMoves);
