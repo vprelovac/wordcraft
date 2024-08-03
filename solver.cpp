@@ -68,10 +68,6 @@ struct GameState { // Represents the state of the game at any point
 
     bool is_solved() const { // Check if the current state matches the target sentence
 
-        auto check_words = [&](const std::vector<std::string>& words) -> bool { // Helper function to check if joined words match the target sentence
-            std::string joined_words = join_words(words);
-            return joined_words == target_sentence || joined_words == reversed_target_sentence;
-        };
 
         // Check horizontal arrangement of words
         for (int row = 0; row < grid_size.first; ++row) {
@@ -84,7 +80,8 @@ struct GameState { // Represents the state of the game at any point
                     if (!row_words.empty()) break;
                 }
             }
-            if (check_words(row_words)) {
+            std::string joined_row_words = join_words(row_words);
+            if (joined_row_words == target_sentence || joined_row_words == reversed_target_sentence) {
                 return true;
             }
         }
@@ -100,7 +97,8 @@ struct GameState { // Represents the state of the game at any point
                     if (!col_words.empty()) break;
                 }
             }
-            if (check_words(col_words)) {
+            std::string joined_col_words = join_words(col_words);
+            if (joined_col_words == target_sentence || joined_col_words == reversed_target_sentence) {
                 return true;
             }
         }
