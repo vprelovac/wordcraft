@@ -19,23 +19,7 @@ const int MAX_PATHS_TRAVERSED = 10000000; // Maximum number of paths to traverse
 
 std::mutex cout_mutex; // Mutex for thread-safe console output
 
-struct Position { // Represents a position in the grid
-    int row, col;
-    bool operator==(const Position& other) const { // Equality operator for Position
-        return row == other.row && col == other.col;
-    }
-
-
-};
-
-namespace std { // Custom hash function for Position to use in unordered_set
-    template <>
-    struct hash<Position> {
-        size_t operator()(const Position& pos) const {
-            return hash<int>()(pos.row) ^ hash<int>()(pos.col);
-        }
-    };
-}
+using Position = std::pair<int, int>;
 
 struct GameState { // Represents the state of the game at any point
     int level;
@@ -68,15 +52,15 @@ struct GameState { // Represents the state of the game at any point
     }
 
     bool is_out_of_bounds(const Position& pos) const { // Check if a position is out of the grid bounds
-        return pos.row < 0 || pos.row >= grid_size.row || pos.col < 0 || pos.col >= grid_size.col;
+        return pos.first < 0 || pos.first >= grid_size.first || pos.second < 0 || pos.second >= grid_size.second;
     }
 
     void move_word(int word_index, const Position& direction) { // Move a word in the specified direction until it hits a wall or another word
         Position current_position = word_positions[word_index];
-        Position new_position = {current_position.row + direction.row, current_position.col + direction.col};
+        Position new_position = {current_position.first + direction.first, current_position.second + direction.second};
         while (!is_out_of_bounds(new_position) && !is_position_occupied(new_position)) {
             current_position = new_position;
-            new_position = {current_position.row + direction.row, current_position.col + direction.col};
+            new_position = {current_position.first + direction.first, current_position.second + direction.second};
         }
         word_positions[word_index] = current_position;
     }
@@ -89,9 +73,9 @@ struct GameState { // Represents the state of the game at any point
         };
 
         // Check horizontal arrangement of words
-        for (int row = 0; row < grid_size.row; ++row) {
+        for (int row = 0; row < grid_size.first; ++row) {
             std::vector<std::string> row_words;
-            for (int col = 0; col < grid_size.col; ++col) {
+            for (int col = 0; col < grid_size.second; ++col) {
                 auto it = std::find(word_positions.begin(), word_positions.end(), Position{row, col});
                 if (it != word_positions.end()) {
                     row_words.push_back(words[it - word_positions.begin()]);
@@ -105,9 +89,9 @@ struct GameState { // Represents the state of the game at any point
         }
 
         // Check vertical arrangement of words
-        for (int col = 0; col < grid_size.col; ++col) {
+        for (int col = 0; col < grid_size.second; ++col) {
             std::vector<std::string> col_words;
-            for (int row = 0; row < grid_size.row; ++row) {
+            for (int row = 0; row < grid_size.first; ++row) {
                 auto it = std::find(word_positions.begin(), word_positions.end(), Position{row, col});
                 if (it != word_positions.end()) {
                     col_words.push_back(words[it - word_positions.begin()]);
@@ -139,8 +123,8 @@ struct GameState { // Represents the state of the game at any point
         };
 
         // Check horizontal positions
-        for (int row = 0; row < grid_size.row; ++row) {
-            for (int col = 0; col <= grid_size.col - sentence_length; ++col) {
+        for (int row = 0; row < grid_size.first; ++row) {
+            for (int col = 0; col <= grid_size.second - sentence_length; ++col) {
                 std::vector<Position> goal_state;
                 for (int i = 0; i < sentence_length; ++i) {
                     goal_state.push_back({row, col + i});
@@ -160,8 +144,8 @@ struct GameState { // Represents the state of the game at any point
         }
 
         // Check vertical positions
-        for (int col = 0; col < grid_size.col; ++col) {
-            for (int row = 0; row <= grid_size.row - sentence_length; ++row) {
+        for (int col = 0; col < grid_size.second; ++col) {
+            for (int row = 0; row <= grid_size.first - sentence_length; ++row) {
                 std::vector<Position> goal_state;
                 for (int i = 0; i < sentence_length; ++i) {
                     goal_state.push_back({row + i, col});
