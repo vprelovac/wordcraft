@@ -178,6 +178,10 @@ int calculate_possible_positions(const GameState& state) { // Calculate the numb
     int count = 0;
     int sentence_length = state.words.size();
 
+    std::cout << "Debugging calculate_possible_positions for level " << state.level << std::endl;
+    std::cout << "Grid size: " << state.grid_size.row << "x" << state.grid_size.col << std::endl;
+    std::cout << "Sentence length: " << sentence_length << std::endl;
+
     // Check horizontal positions for validity
     for (int row = 0; row < state.grid_size.row; ++row) {
         for (int col = 0; col <= state.grid_size.col - sentence_length; ++col) {
@@ -188,7 +192,10 @@ int calculate_possible_positions(const GameState& state) { // Calculate the numb
                     break;
                 }
             }
-            if (valid) count += 2; // Count both left-to-right and right-to-left
+            if (valid) {
+                count += 2; // Count both left-to-right and right-to-left
+                std::cout << "Valid horizontal position found at (" << row << ", " << col << ")" << std::endl;
+            }
         }
     }
 
@@ -202,10 +209,14 @@ int calculate_possible_positions(const GameState& state) { // Calculate the numb
                     break;
                 }
             }
-            if (valid) count += 2; // Count both top-to-bottom and bottom-to-top
+            if (valid) {
+                count += 2; // Count both top-to-bottom and bottom-to-top
+                std::cout << "Valid vertical position found at (" << row << ", " << col << ")" << std::endl;
+            }
         }
     }
 
+    std::cout << "Total possible positions: " << count << std::endl;
     return count;
 }
 
@@ -352,42 +363,39 @@ int main() { // Main function to load levels and solve them
     Position grid_size = {8, 8}; // Assuming a grid size of 8x8
     auto levels = load_level_data(csv_file); // Load level data from the CSV file
 
-    std::vector<std::thread> threads; // Vector to hold threads for parallel processing
-    std::mutex cout_mutex; // Mutex to synchronize console output
+    // Find level 10
+    auto level_10_it = std::find_if(levels.begin(), levels.end(), [](const GameState& level) {
+        return level.level == 10;
+    });
 
-    for (const auto& level_data : levels) {
-        threads.emplace_back([&level_data, &cout_mutex]() { // Create a thread for each level
-            int possible_positions = calculate_possible_positions(level_data); // Calculate possible positions for the target sentence
-            {
-                std::lock_guard<std::mutex> lock(cout_mutex);
-                std::cout << "Solving Level " << level_data.level << std::endl;
-                std::cout << "Possible positions for sentence: " << possible_positions << std::endl;
-            }
-            auto start = std::chrono::high_resolution_clock::now(); // Start time for performance measurement
-            auto result = solve_game(level_data); // Solve the game for the current level
-            auto solution = result.first; // Extract the solution path
-            auto paths_traversed = result.second;
-            auto end = std::chrono::high_resolution_clock::now(); // End time for performance measurement
-            std::chrono::duration<double> time_taken = end - start; // Calculate the time taken to solve the level
-            std::lock_guard<std::mutex> lock(cout_mutex);
-            if (!solution.empty()) { // If a solution is found, print it
-                std::cout << "Solution for Level " << level_data.level << ": ";
-                for (const auto& move : solution) {
-                    std::cout << "(" << move.first << ", " << move.second << ") ";
-                }
-                std::cout << std::endl;
-                std::cout << "Minimum moves for Level " << level_data.level << ": " << solution.size() << std::endl; // Print the number of moves
-                std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl; // Print the time taken
-                std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl; // Print the number of paths traversed
-            } else {
-                std::cout << "No solution found for Level " << level_data.level << std::endl; // If no solution is found, print a message
-                std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
-            }
-        });
-    }
+    if (level_10_it != levels.end()) {
+        const auto& level_data = *level_10_it;
+        int possible_positions = calculate_possible_positions(level_data); // Calculate possible positions for the target sentence
+        std::cout << "Solving Level " << level_data.level << std::endl;
+        std::cout << "Possible positions for sentence: " << possible_positions << std::endl;
 
-    for (auto& thread : threads) { // Join all threads
-        thread.join();
+        auto start = std::chrono::high_resolution_clock::now(); // Start time for performance measurement
+        auto result = solve_game(level_data); // Solve the game for the current level
+        auto solution = result.first; // Extract the solution path
+        auto paths_traversed = result.second;
+        auto end = std::chrono::high_resolution_clock::now(); // End time for performance measurement
+        std::chrono::duration<double> time_taken = end - start; // Calculate the time taken to solve the level
+
+        if (!solution.empty()) { // If a solution is found, print it
+            std::cout << "Solution for Level " << level_data.level << ": ";
+            for (const auto& move : solution) {
+                std::cout << "(" << move.first << ", " << move.second << ") ";
+            }
+            std::cout << std::endl;
+            std::cout << "Minimum moves for Level " << level_data.level << ": " << solution.size() << std::endl; // Print the number of moves
+            std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl; // Print the time taken
+            std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl; // Print the number of paths traversed
+        } else {
+            std::cout << "No solution found for Level " << level_data.level << std::endl; // If no solution is found, print a message
+            std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
+        }
+    } else {
+        std::cout << "Level 10 not found in the loaded data." << std::endl;
     }
 
     return 0; // Return success
