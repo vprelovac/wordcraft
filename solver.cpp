@@ -689,7 +689,7 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
                 auto path = visited[current_state.word_positions];
                 return {original_time, precalculated_time, paths_traversed, path};
             }
-        } else if (current_state.is_solved()) {
+        } else if (current_state.is_solved_precalculated(goal_positions)) {
             auto path = visited[current_state.word_positions];
             std::cout << "Solution found: ";
             for (const auto& move : path) {
