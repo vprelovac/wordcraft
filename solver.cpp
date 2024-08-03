@@ -360,13 +360,7 @@ int main() { // Main function to load levels and solve them
     Position grid_size = {8, 8}; // Assuming a grid size of 8x8
     auto levels = load_level_data(csv_file); // Load level data from the CSV file
 
-    // Find level 10
-    auto level_10_it = std::find_if(levels.begin(), levels.end(), [](const GameState& level) {
-        return level.level == 10;
-    });
-
-    if (level_10_it != levels.end()) {
-        const auto& level_data = *level_10_it;
+    for (const auto& level_data : levels) {
         int possible_positions = calculate_possible_positions(level_data); // Calculate possible positions for the target sentence
         std::cout << "Solving Level " << level_data.level << std::endl;
         std::cout << "Possible positions for sentence: " << possible_positions << std::endl;
@@ -391,8 +385,7 @@ int main() { // Main function to load levels and solve them
             std::cout << "No solution found for Level " << level_data.level << std::endl; // If no solution is found, print a message
             std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
         }
-    } else {
-        std::cout << "Level 10 not found in the loaded data." << std::endl;
+        std::cout << std::endl; // Add a blank line between levels for better readability
     }
 
     return 0; // Return success
