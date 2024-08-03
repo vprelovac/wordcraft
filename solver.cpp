@@ -5,14 +5,10 @@
 #include <sstream>
 #include <vector>
 #include <unordered_set>
-#include <tuple>
 #include <chrono>
 #include <thread>
 #include <mutex>
 #include <iomanip>
-#include <thread>
-#include <mutex>
-#include <atomic>
 #include <queue>
 #include <functional>
 #include <condition_variable>
@@ -190,12 +186,14 @@ struct GameState { // Represents the state of the game at any point
     }
 };
 
-const std::unordered_map<std::string, Position> DIRECTIONS = { // Possible movement directions
+#include <array>
+
+const std::array<std::pair<std::string, Position>, 4> DIRECTIONS = {{ // Possible movement directions
     {"up", {-1, 0}},
     {"down", {1, 0}},
     {"left", {0, -1}},
     {"right", {0, 1}}
-};
+}};
 
 std::vector<GameState> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
     std::vector<GameState> levels;
