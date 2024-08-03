@@ -264,20 +264,20 @@ const easyLevels = [
 
 const hardLevels = [
     // Copy of easy levels with different seeds (you'll need to change these)
-    { sentence: "The quick brown fox", seed: 1, minMoves: 0 },
+    { sentence: "The quick brown fox", seed: 12, minMoves: 0 },
     { sentence: "Jumps over the lazy dog", seed: 3, minMoves: 0 },
-    { sentence: "Better late than never friend", seed: 8877, minMoves: 0 },
+    { sentence: "Better late than never friend", seed: 3, minMoves: 0 },
     { sentence: "Make hay while the sun shines", seed: 97531, minMoves: 0 },
-    { sentence: "A stitch in time saves nine", seed: 62242, minMoves: 0 },
-    { sentence: "Actions speak louder than words", seed: 42211, minMoves: 0 },
+    { sentence: "A stitch in time saves nine", seed: 444, minMoves: 0 },
+    { sentence: "Actions speak louder than words", seed: 5, minMoves: 0 },
     { sentence: "All that glitters is not gold", seed: 744, minMoves: 0 },
     { sentence: "A rolling stone gathers no moss", seed: 19, minMoves: 0 },
     { sentence: "Fortune always favors the brave soul", seed: 1231, minMoves: 0 },
     { sentence: "Practice makes perfect or at least less bad", seed: 64, minMoves: 0 },
     { sentence: "So you are not tired of this yet", seed: 82, minMoves: 0 },
-    { sentence: "This one is for the fans", seed: 87654321, minMoves: 0 },
+    { sentence: "This one is for the fans", seed: 874321, minMoves: 0 },
     { sentence: "Make the most of your time on earth", seed: 54321, minMoves: 0 },
-    { sentence: "I dare you to speed run me", seed: 5431, minMoves: 0 },
+    { sentence: "I dare you to speed run me", seed: 140, minMoves: 0 },
 ];
 
 let levels = easyLevels;
@@ -408,97 +408,6 @@ function updateUIForGameMode() {
     }
 }
 
-// Game State Management
-function generateHardModeLevel(level) {
-    try {
-        const { gridSize } = gameState;
-        if (!gridSize || typeof gridSize.rows !== 'number' || typeof gridSize.cols !== 'number') {
-            throw new Error('Invalid grid size');
-        }
-
-        const currentLevel = levels[level - 1];
-        if (!currentLevel) {
-            throw new Error(`Level ${level} not found`);
-        }
-
-        gameState.targetSentence = currentLevel.sentence;
-        if (typeof gameState.targetSentence !== 'string' || gameState.targetSentence.trim() === '') {
-            throw new Error('Invalid target sentence');
-        }
-
-        gameState.words = gameState.targetSentence.split(' ').filter(word => word.trim() !== '');
-        if (gameState.words.length === 0) {
-            throw new Error('No valid words in target sentence');
-        }
-
-        gameState.wordPositions = [];
-
-        // Initialize seeded random number generator for this level
-        gameState.rng = mulberry32(currentLevel.seed);
-
-        // Calculate the number of walls based on the level
-        const totalCells = gridSize.rows * gridSize.cols;
-        const wallPercentage = Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE);
-        let numWalls = Math.floor(totalCells * wallPercentage);
-
-        gameState.walls = [];
-
-        // Add outer walls for hard mode
-        for (let i = 0; i < gridSize.rows; i++) {
-            gameState.walls.push({ row: i, col: 0 });
-            gameState.walls.push({ row: i, col: gridSize.cols - 1 });
-        }
-        for (let j = 0; j < gridSize.cols; j++) {
-            gameState.walls.push({ row: 0, col: j });
-            gameState.walls.push({ row: gridSize.rows - 1, col: j });
-        }
-
-        for (let i = 0; i < numWalls; i++) {
-            let wall;
-            let attempts = 0;
-            const maxAttempts = 10000;
-            do {
-                wall = {
-                    row: Math.floor(gameState.rng() * gridSize.rows),
-                    col: Math.floor(gameState.rng() * gridSize.cols)
-                };
-                attempts++;
-                if (attempts > maxAttempts) {
-                    console.warn('Unable to place all walls, proceeding with fewer walls');
-                    break;
-                }
-            } while (gameState.walls.some(w => w.row === wall.row && w.col === wall.col) || isPositionIsolated(wall));
-            gameState.walls.push(wall);
-        }
-
-        gameState.words.forEach(() => {
-            let position;
-            let attempts = 0;
-            const maxAttempts = 10000;
-            do {
-                position = {
-                    row: Math.floor(gameState.rng() * gridSize.rows),
-                    col: Math.floor(gameState.rng() * gridSize.cols)
-                };
-                attempts++;
-                if (attempts > maxAttempts) {
-                    console.warn('Unable to place all words, proceeding with fewer words');
-                    break;
-                }
-            } while (isPositionOccupied(position) || isPositionIsolated(position) || 
-                     (position.row === 0 || position.row === 9 || position.col === 0 || position.col === 9) ||
-                     gameState.walls.some(w => w.row === position.row && w.col === position.col) ||
-                     gameState.walls.some(w => w.row === position.row && w.col === position.col));
-            gameState.wordPositions.push(position);
-        });
-
-        gameState.isAnimating = false;
-    } catch (error) {
-        console.error("Error generating level:", error);
-        alert("An error occurred while generating the level. Please try again.");
-        throw error;
-    }
-}
 
 function generateLevel(level) {
     try {
@@ -508,8 +417,7 @@ function generateLevel(level) {
         }
 
         if (isHardMode) {
-            generateHardModeLevel(level);
-            return;
+          
         }
 
         const currentLevel = levels[level - 1];
@@ -537,26 +445,37 @@ function generateLevel(level) {
         const wallPercentage = level <= 4 
             ? Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE)
             : Math.min(WALL_PERCENTAGE_INITIAL + (level - 4) * WALL_PERCENTAGE_DECREASE, WALL_PERCENTAGE_INITIAL);
+
         let numWalls = Math.floor(totalCells * wallPercentage);
+
         if (isHardMode) {
-            numWalls = Math.floor(numWalls * 0.5); // 30% fewer walls in hard mode
+            numWalls = numWalls *0.5
         }
 
         gameState.walls = [];
 
-        // Add outer walls for hard mode
         if (isHardMode) {
+          
+            // Add outer walls for hard mode
             for (let i = 0; i < gridSize.rows; i++) {
-                gameState.walls.push({ row: i, col: 0 });
-                gameState.walls.push({ row: i, col: gridSize.cols - 1 });
+                if (Math.random() < 0.5) {
+                    gameState.walls.push({ row: i, col: 0 });
+                }
+                if (Math.random() < 0.5) {
+                    gameState.walls.push({ row: i, col: gridSize.cols - 1 });
+                }
             }
             for (let j = 0; j < gridSize.cols; j++) {
-                gameState.walls.push({ row: 0, col: j });
-                gameState.walls.push({ row: gridSize.rows - 1, col: j });
+                if (Math.random() < 0.5) {
+                    gameState.walls.push({ row: 0, col: j });
+                }
+                
+                if (Math.random() < 0.5) {
+                    gameState.walls.push({ row: gridSize.rows - 1, col: j });
+                }
             }
-        }
-
-        for (let i = 0; i < numWalls; i++) {
+       } 
+       for (let i = 0; i < numWalls; i++) {
             let wall;
             let attempts = 0;
             const maxAttempts = 10000;
@@ -569,7 +488,7 @@ function generateLevel(level) {
                 if (attempts > maxAttempts) {
                     throw new Error('Unable to place walls after maximum attempts');
                 }
-            } while (gameState.walls.some(w => w.row === wall.row && w.col === wall.col));
+            } while (isPositionOccupied(wall));
             gameState.walls.push(wall);
         }
 
@@ -586,8 +505,7 @@ function generateLevel(level) {
                 if (attempts > maxAttempts) {
                     throw new Error('Unable to place words after maximum attempts');
                 }
-            } while (isPositionOccupied(position) || isPositionIsolated(position) || 
-                     (isHardMode && (position.row === 0 || position.row === 9 || position.col === 0 || position.col === 9)));
+            } while (isPositionOccupied(position));
             gameState.wordPositions.push(position);
         });
 
