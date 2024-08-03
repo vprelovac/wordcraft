@@ -377,30 +377,41 @@ function generateLevel(level) {
         // Initialize seeded random number generator for this level
         gameState.rng = mulberry32(currentLevel.seed);
 
-        // Calculate the number of walls based on the level
-        const totalCells = gridSize.rows * gridSize.cols;
-        const wallPercentage = level === 0 ? 0.1 : 
-            isHardMode ? 
-            Math.max(WALL_PERCENTAGE_INITIAL * 0.7 - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE) :
-            Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE);
-        const numWalls = Math.floor(totalCells * wallPercentage);
-
+        // Generate walls
         gameState.walls = [];
-        for (let i = 0; i < numWalls; i++) {
-            let wall;
-            let attempts = 0;
-            const maxAttempts = 100;
-            do {
-                wall = {
-                    row: Math.floor(gameState.rng() * gridSize.rows),
-                    col: Math.floor(gameState.rng() * gridSize.cols)
-                };
-                attempts++;
-                if (attempts > maxAttempts) {
-                    throw new Error('Unable to place walls after maximum attempts');
-                }
-            } while (gameState.walls.some(w => w.row === wall.row && w.col === wall.col));
-            gameState.walls.push(wall);
+        if (isHardMode) {
+            // Add walls all around the board in hard mode
+            for (let row = 0; row < gridSize.rows; row++) {
+                gameState.walls.push({row, col: 0});
+                gameState.walls.push({row, col: gridSize.cols - 1});
+            }
+            for (let col = 1; col < gridSize.cols - 1; col++) {
+                gameState.walls.push({row: 0, col});
+                gameState.walls.push({row: gridSize.rows - 1, col});
+            }
+        } else {
+            // Calculate the number of walls based on the level for easy mode
+            const totalCells = gridSize.rows * gridSize.cols;
+            const wallPercentage = level === 0 ? 0.1 : 
+                Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE);
+            const numWalls = Math.floor(totalCells * wallPercentage);
+
+            for (let i = 0; i < numWalls; i++) {
+                let wall;
+                let attempts = 0;
+                const maxAttempts = 100;
+                do {
+                    wall = {
+                        row: Math.floor(gameState.rng() * gridSize.rows),
+                        col: Math.floor(gameState.rng() * gridSize.cols)
+                    };
+                    attempts++;
+                    if (attempts > maxAttempts) {
+                        throw new Error('Unable to place walls after maximum attempts');
+                    }
+                } while (gameState.walls.some(w => w.row === wall.row && w.col === wall.col));
+                gameState.walls.push(wall);
+            }
         }
 
         if (level === 0) {
