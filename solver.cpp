@@ -236,8 +236,8 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
         std::size_t operator()(const std::vector<Position>& vec) const {
             std::size_t seed = vec.size();
             for (const auto& pos : vec) {
-                seed ^= std::hash<int>()(pos.row) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-                seed ^= std::hash<int>()(pos.col) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+                seed ^= std::hash<int>()(pos.first) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+                seed ^= std::hash<int>()(pos.second) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             }
             return seed;
         }
