@@ -1,0 +1,500 @@
+Level,Sentence,Type,Row,Col
+1,The quick brown fox,Word 1,0,9
+1,The quick brown fox,Word 2,3,7
+1,The quick brown fox,Word 3,6,7
+1,The quick brown fox,Word 4,4,7
+1,The quick brown fox,Wall 1,1,0
+1,The quick brown fox,Wall 2,5,0
+1,The quick brown fox,Wall 3,8,0
+1,The quick brown fox,Wall 4,0,0
+1,The quick brown fox,Wall 5,9,0
+1,The quick brown fox,Wall 6,0,1
+1,The quick brown fox,Wall 7,9,1
+1,The quick brown fox,Wall 8,0,2
+1,The quick brown fox,Wall 9,9,2
+1,The quick brown fox,Wall 10,0,3
+1,The quick brown fox,Wall 11,9,3
+1,The quick brown fox,Wall 12,0,4
+1,The quick brown fox,Wall 13,0,5
+1,The quick brown fox,Wall 14,9,5
+1,The quick brown fox,Wall 15,0,6
+1,The quick brown fox,Wall 16,9,6
+1,The quick brown fox,Wall 17,0,8
+1,The quick brown fox,Wall 18,9,8
+1,The quick brown fox,Wall 19,7,1
+1,The quick brown fox,Wall 20,7,4
+1,The quick brown fox,Wall 21,7,9
+1,The quick brown fox,Wall 22,2,7
+1,The quick brown fox,Wall 23,1,3
+1,The quick brown fox,Wall 24,4,2
+1,The quick brown fox,Wall 25,1,7
+1,The quick brown fox,Wall 26,5,1
+1,The quick brown fox,Wall 27,2,0
+1,The quick brown fox,Wall 28,6,8
+1,The quick brown fox,Wall 29,2,9
+1,The quick brown fox,Wall 30,3,6
+1,The quick brown fox,Wall 31,9,9
+1,The quick brown fox,Wall 32,6,9
+1,The quick brown fox,Wall 33,8,9
+2,Jumps over the lazy dog,Word 1,8,7
+2,Jumps over the lazy dog,Word 2,7,2
+2,Jumps over the lazy dog,Word 3,6,2
+2,Jumps over the lazy dog,Word 4,5,3
+2,Jumps over the lazy dog,Word 5,5,7
+2,Jumps over the lazy dog,Wall 1,0,0
+2,Jumps over the lazy dog,Wall 2,1,0
+2,Jumps over the lazy dog,Wall 3,2,0
+2,Jumps over the lazy dog,Wall 4,3,0
+2,Jumps over the lazy dog,Wall 5,4,0
+2,Jumps over the lazy dog,Wall 6,8,0
+2,Jumps over the lazy dog,Wall 7,0,0
+2,Jumps over the lazy dog,Wall 8,9,0
+2,Jumps over the lazy dog,Wall 9,9,1
+2,Jumps over the lazy dog,Wall 10,9,4
+2,Jumps over the lazy dog,Wall 11,0,5
+2,Jumps over the lazy dog,Wall 12,0,6
+2,Jumps over the lazy dog,Wall 13,9,6
+2,Jumps over the lazy dog,Wall 14,9,8
+2,Jumps over the lazy dog,Wall 15,0,9
+2,Jumps over the lazy dog,Wall 16,9,9
+2,Jumps over the lazy dog,Wall 17,7,5
+2,Jumps over the lazy dog,Wall 18,2,1
+2,Jumps over the lazy dog,Wall 19,3,2
+2,Jumps over the lazy dog,Wall 20,1,3
+2,Jumps over the lazy dog,Wall 21,8,4
+2,Jumps over the lazy dog,Wall 22,4,7
+2,Jumps over the lazy dog,Wall 23,7,9
+2,Jumps over the lazy dog,Wall 24,5,5
+2,Jumps over the lazy dog,Wall 25,3,4
+2,Jumps over the lazy dog,Wall 26,2,6
+2,Jumps over the lazy dog,Wall 27,0,3
+2,Jumps over the lazy dog,Wall 28,0,1
+2,Jumps over the lazy dog,Wall 29,0,7
+2,Jumps over the lazy dog,Wall 30,4,8
+3,Better late than never friend,Word 1,4,8
+3,Better late than never friend,Word 2,3,8
+3,Better late than never friend,Word 3,8,8
+3,Better late than never friend,Word 4,1,8
+3,Better late than never friend,Word 5,7,8
+3,Better late than never friend,Wall 1,2,0
+3,Better late than never friend,Wall 2,3,0
+3,Better late than never friend,Wall 3,5,0
+3,Better late than never friend,Wall 4,6,0
+3,Better late than never friend,Wall 5,7,0
+3,Better late than never friend,Wall 6,9,0
+3,Better late than never friend,Wall 7,0,1
+3,Better late than never friend,Wall 8,9,1
+3,Better late than never friend,Wall 9,0,2
+3,Better late than never friend,Wall 10,9,2
+3,Better late than never friend,Wall 11,9,3
+3,Better late than never friend,Wall 12,0,4
+3,Better late than never friend,Wall 13,9,4
+3,Better late than never friend,Wall 14,0,5
+3,Better late than never friend,Wall 15,9,5
+3,Better late than never friend,Wall 16,0,6
+3,Better late than never friend,Wall 17,9,6
+3,Better late than never friend,Wall 18,0,7
+3,Better late than never friend,Wall 19,9,7
+3,Better late than never friend,Wall 20,0,9
+3,Better late than never friend,Wall 21,9,9
+3,Better late than never friend,Wall 22,6,9
+3,Better late than never friend,Wall 23,5,9
+3,Better late than never friend,Wall 24,7,1
+3,Better late than never friend,Wall 25,1,3
+3,Better late than never friend,Wall 26,6,4
+3,Better late than never friend,Wall 27,0,0
+3,Better late than never friend,Wall 28,7,6
+3,Better late than never friend,Wall 29,1,5
+3,Better late than never friend,Wall 30,4,2
+3,Better late than never friend,Wall 31,2,7
+3,Better late than never friend,Wall 32,1,6
+3,Better late than never friend,Wall 33,4,6
+3,Better late than never friend,Wall 34,6,8
+4,Make hay while the sun shines,Word 1,8,5
+4,Make hay while the sun shines,Word 2,3,2
+4,Make hay while the sun shines,Word 3,3,5
+4,Make hay while the sun shines,Word 4,2,5
+4,Make hay while the sun shines,Word 5,2,8
+4,Make hay while the sun shines,Word 6,6,5
+4,Make hay while the sun shines,Wall 1,0,0
+4,Make hay while the sun shines,Wall 2,2,0
+4,Make hay while the sun shines,Wall 3,4,0
+4,Make hay while the sun shines,Wall 4,5,0
+4,Make hay while the sun shines,Wall 5,6,0
+4,Make hay while the sun shines,Wall 6,7,0
+4,Make hay while the sun shines,Wall 7,8,0
+4,Make hay while the sun shines,Wall 8,9,0
+4,Make hay while the sun shines,Wall 9,0,0
+4,Make hay while the sun shines,Wall 10,0,1
+4,Make hay while the sun shines,Wall 11,9,1
+4,Make hay while the sun shines,Wall 12,0,3
+4,Make hay while the sun shines,Wall 13,9,3
+4,Make hay while the sun shines,Wall 14,0,6
+4,Make hay while the sun shines,Wall 15,0,7
+4,Make hay while the sun shines,Wall 16,9,7
+4,Make hay while the sun shines,Wall 17,0,9
+4,Make hay while the sun shines,Wall 18,1,2
+4,Make hay while the sun shines,Wall 19,1,0
+4,Make hay while the sun shines,Wall 20,6,1
+4,Make hay while the sun shines,Wall 21,3,8
+4,Make hay while the sun shines,Wall 22,7,1
+4,Make hay while the sun shines,Wall 23,5,9
+4,Make hay while the sun shines,Wall 24,5,8
+4,Make hay while the sun shines,Wall 25,3,6
+4,Make hay while the sun shines,Wall 26,9,8
+4,Make hay while the sun shines,Wall 27,8,1
+4,Make hay while the sun shines,Wall 28,6,4
+4,Make hay while the sun shines,Wall 29,7,9
+5,A stitch in time saves nine,Word 1,4,5
+5,A stitch in time saves nine,Word 2,5,5
+5,A stitch in time saves nine,Word 3,2,3
+5,A stitch in time saves nine,Word 4,3,7
+5,A stitch in time saves nine,Word 5,6,5
+5,A stitch in time saves nine,Word 6,1,2
+5,A stitch in time saves nine,Wall 1,0,0
+5,A stitch in time saves nine,Wall 2,3,0
+5,A stitch in time saves nine,Wall 3,4,0
+5,A stitch in time saves nine,Wall 4,5,0
+5,A stitch in time saves nine,Wall 5,7,0
+5,A stitch in time saves nine,Wall 6,0,1
+5,A stitch in time saves nine,Wall 7,9,1
+5,A stitch in time saves nine,Wall 8,9,3
+5,A stitch in time saves nine,Wall 9,9,4
+5,A stitch in time saves nine,Wall 10,9,6
+5,A stitch in time saves nine,Wall 11,0,7
+5,A stitch in time saves nine,Wall 12,0,8
+5,A stitch in time saves nine,Wall 13,9,8
+5,A stitch in time saves nine,Wall 14,2,6
+5,A stitch in time saves nine,Wall 15,2,4
+5,A stitch in time saves nine,Wall 16,5,2
+5,A stitch in time saves nine,Wall 17,3,4
+5,A stitch in time saves nine,Wall 18,7,3
+5,A stitch in time saves nine,Wall 19,1,4
+5,A stitch in time saves nine,Wall 20,4,3
+5,A stitch in time saves nine,Wall 21,2,7
+5,A stitch in time saves nine,Wall 22,1,6
+5,A stitch in time saves nine,Wall 23,6,8
+5,A stitch in time saves nine,Wall 24,8,1
+5,A stitch in time saves nine,Wall 25,0,6
+5,A stitch in time saves nine,Wall 26,7,9
+5,A stitch in time saves nine,Wall 27,3,6
+5,A stitch in time saves nine,Wall 28,7,2
+6,Actions speak louder than words,Word 1,3,4
+6,Actions speak louder than words,Word 2,1,3
+6,Actions speak louder than words,Word 3,8,4
+6,Actions speak louder than words,Word 4,1,1
+6,Actions speak louder than words,Word 5,1,6
+6,Actions speak louder than words,Wall 1,2,0
+6,Actions speak louder than words,Wall 2,4,0
+6,Actions speak louder than words,Wall 3,7,0
+6,Actions speak louder than words,Wall 4,9,0
+6,Actions speak louder than words,Wall 5,9,1
+6,Actions speak louder than words,Wall 6,0,2
+6,Actions speak louder than words,Wall 7,9,2
+6,Actions speak louder than words,Wall 8,9,3
+6,Actions speak louder than words,Wall 9,0,5
+6,Actions speak louder than words,Wall 10,9,5
+6,Actions speak louder than words,Wall 11,9,6
+6,Actions speak louder than words,Wall 12,0,7
+6,Actions speak louder than words,Wall 13,9,7
+6,Actions speak louder than words,Wall 14,0,8
+6,Actions speak louder than words,Wall 15,0,9
+6,Actions speak louder than words,Wall 16,9,9
+6,Actions speak louder than words,Wall 17,8,3
+6,Actions speak louder than words,Wall 18,4,9
+6,Actions speak louder than words,Wall 19,2,3
+6,Actions speak louder than words,Wall 20,2,8
+6,Actions speak louder than words,Wall 21,7,8
+6,Actions speak louder than words,Wall 22,5,8
+6,Actions speak louder than words,Wall 23,6,1
+6,Actions speak louder than words,Wall 24,6,5
+6,Actions speak louder than words,Wall 25,3,7
+6,Actions speak louder than words,Wall 26,6,0
+6,Actions speak louder than words,Wall 27,3,8
+6,Actions speak louder than words,Wall 28,2,1
+6,Actions speak louder than words,Wall 29,8,2
+6,Actions speak louder than words,Wall 30,3,6
+6,Actions speak louder than words,Wall 31,0,0
+7,All that glitters is not gold,Word 1,7,1
+7,All that glitters is not gold,Word 2,7,2
+7,All that glitters is not gold,Word 3,1,2
+7,All that glitters is not gold,Word 4,1,1
+7,All that glitters is not gold,Word 5,8,5
+7,All that glitters is not gold,Word 6,7,8
+7,All that glitters is not gold,Wall 1,0,0
+7,All that glitters is not gold,Wall 2,3,0
+7,All that glitters is not gold,Wall 3,4,0
+7,All that glitters is not gold,Wall 4,6,0
+7,All that glitters is not gold,Wall 5,8,0
+7,All that glitters is not gold,Wall 6,0,0
+7,All that glitters is not gold,Wall 7,9,2
+7,All that glitters is not gold,Wall 8,0,3
+7,All that glitters is not gold,Wall 9,0,7
+7,All that glitters is not gold,Wall 10,9,7
+7,All that glitters is not gold,Wall 11,0,9
+7,All that glitters is not gold,Wall 12,9,9
+7,All that glitters is not gold,Wall 13,5,5
+7,All that glitters is not gold,Wall 14,7,7
+7,All that glitters is not gold,Wall 15,2,4
+7,All that glitters is not gold,Wall 16,6,9
+7,All that glitters is not gold,Wall 17,9,0
+7,All that glitters is not gold,Wall 18,2,3
+7,All that glitters is not gold,Wall 19,6,8
+7,All that glitters is not gold,Wall 20,1,4
+7,All that glitters is not gold,Wall 21,2,6
+7,All that glitters is not gold,Wall 22,9,3
+7,All that glitters is not gold,Wall 23,0,8
+7,All that glitters is not gold,Wall 24,8,4
+7,All that glitters is not gold,Wall 25,4,4
+7,All that glitters is not gold,Wall 26,5,6
+7,All that glitters is not gold,Wall 27,0,1
+8,A rolling stone gathers no moss,Word 1,1,1
+8,A rolling stone gathers no moss,Word 2,3,5
+8,A rolling stone gathers no moss,Word 3,5,1
+8,A rolling stone gathers no moss,Word 4,7,1
+8,A rolling stone gathers no moss,Word 5,8,2
+8,A rolling stone gathers no moss,Word 6,7,9
+8,A rolling stone gathers no moss,Wall 1,3,0
+8,A rolling stone gathers no moss,Wall 2,9,0
+8,A rolling stone gathers no moss,Wall 3,0,0
+8,A rolling stone gathers no moss,Wall 4,9,0
+8,A rolling stone gathers no moss,Wall 5,0,3
+8,A rolling stone gathers no moss,Wall 6,0,4
+8,A rolling stone gathers no moss,Wall 7,0,5
+8,A rolling stone gathers no moss,Wall 8,0,7
+8,A rolling stone gathers no moss,Wall 9,9,7
+8,A rolling stone gathers no moss,Wall 10,0,8
+8,A rolling stone gathers no moss,Wall 11,9,8
+8,A rolling stone gathers no moss,Wall 12,0,9
+8,A rolling stone gathers no moss,Wall 13,9,6
+8,A rolling stone gathers no moss,Wall 14,7,6
+8,A rolling stone gathers no moss,Wall 15,1,9
+8,A rolling stone gathers no moss,Wall 16,3,4
+8,A rolling stone gathers no moss,Wall 17,8,8
+8,A rolling stone gathers no moss,Wall 18,2,2
+8,A rolling stone gathers no moss,Wall 19,0,2
+8,A rolling stone gathers no moss,Wall 20,1,6
+8,A rolling stone gathers no moss,Wall 21,1,8
+8,A rolling stone gathers no moss,Wall 22,6,9
+8,A rolling stone gathers no moss,Wall 23,1,3
+8,A rolling stone gathers no moss,Wall 24,4,4
+8,A rolling stone gathers no moss,Wall 25,0,1
+8,A rolling stone gathers no moss,Wall 26,7,4
+8,A rolling stone gathers no moss,Wall 27,4,2
+9,Fortune always favors the brave soul,Word 1,3,7
+9,Fortune always favors the brave soul,Word 2,7,1
+9,Fortune always favors the brave soul,Word 3,4,1
+9,Fortune always favors the brave soul,Word 4,1,6
+9,Fortune always favors the brave soul,Word 5,5,7
+9,Fortune always favors the brave soul,Word 6,2,8
+9,Fortune always favors the brave soul,Wall 1,0,0
+9,Fortune always favors the brave soul,Wall 2,3,0
+9,Fortune always favors the brave soul,Wall 3,5,0
+9,Fortune always favors the brave soul,Wall 4,6,0
+9,Fortune always favors the brave soul,Wall 5,8,0
+9,Fortune always favors the brave soul,Wall 6,9,1
+9,Fortune always favors the brave soul,Wall 7,0,2
+9,Fortune always favors the brave soul,Wall 8,9,2
+9,Fortune always favors the brave soul,Wall 9,9,4
+9,Fortune always favors the brave soul,Wall 10,0,5
+9,Fortune always favors the brave soul,Wall 11,9,6
+9,Fortune always favors the brave soul,Wall 12,0,7
+9,Fortune always favors the brave soul,Wall 13,0,9
+9,Fortune always favors the brave soul,Wall 14,9,9
+9,Fortune always favors the brave soul,Wall 15,6,5
+9,Fortune always favors the brave soul,Wall 16,2,0
+9,Fortune always favors the brave soul,Wall 17,7,8
+9,Fortune always favors the brave soul,Wall 18,8,8
+9,Fortune always favors the brave soul,Wall 19,2,5
+9,Fortune always favors the brave soul,Wall 20,7,5
+9,Fortune always favors the brave soul,Wall 21,8,4
+9,Fortune always favors the brave soul,Wall 22,6,2
+9,Fortune always favors the brave soul,Wall 23,0,3
+9,Fortune always favors the brave soul,Wall 24,3,6
+9,Fortune always favors the brave soul,Wall 25,2,7
+9,Fortune always favors the brave soul,Wall 26,1,7
+9,Fortune always favors the brave soul,Wall 27,5,5
+9,Fortune always favors the brave soul,Wall 28,9,0
+9,Fortune always favors the brave soul,Wall 29,3,3
+10,Practice makes perfect or at least less bad,Word 1,1,9
+10,Practice makes perfect or at least less bad,Word 2,6,5
+10,Practice makes perfect or at least less bad,Word 3,8,5
+10,Practice makes perfect or at least less bad,Word 4,9,1
+10,Practice makes perfect or at least less bad,Word 5,0,7
+10,Practice makes perfect or at least less bad,Word 6,4,5
+10,Practice makes perfect or at least less bad,Word 7,0,8
+10,Practice makes perfect or at least less bad,Word 8,5,3
+10,Practice makes perfect or at least less bad,Wall 1,1,0
+10,Practice makes perfect or at least less bad,Wall 2,3,0
+10,Practice makes perfect or at least less bad,Wall 3,7,0
+10,Practice makes perfect or at least less bad,Wall 4,0,1
+10,Practice makes perfect or at least less bad,Wall 5,0,2
+10,Practice makes perfect or at least less bad,Wall 6,0,3
+10,Practice makes perfect or at least less bad,Wall 7,9,4
+10,Practice makes perfect or at least less bad,Wall 8,9,6
+10,Practice makes perfect or at least less bad,Wall 9,9,7
+10,Practice makes perfect or at least less bad,Wall 10,9,9
+10,Practice makes perfect or at least less bad,Wall 11,5,0
+10,Practice makes perfect or at least less bad,Wall 12,1,2
+10,Practice makes perfect or at least less bad,Wall 13,3,9
+10,Practice makes perfect or at least less bad,Wall 14,2,1
+10,Practice makes perfect or at least less bad,Wall 15,7,1
+10,Practice makes perfect or at least less bad,Wall 16,4,4
+10,Practice makes perfect or at least less bad,Wall 17,3,1
+10,Practice makes perfect or at least less bad,Wall 18,2,3
+10,Practice makes perfect or at least less bad,Wall 19,1,4
+10,Practice makes perfect or at least less bad,Wall 20,4,0
+10,Practice makes perfect or at least less bad,Wall 21,2,8
+10,Practice makes perfect or at least less bad,Wall 22,8,9
+10,Practice makes perfect or at least less bad,Wall 23,6,8
+10,Practice makes perfect or at least less bad,Wall 24,1,6
+10,Practice makes perfect or at least less bad,Wall 25,0,4
+11,So you are not tired of this yet,Word 1,1,1
+11,So you are not tired of this yet,Word 2,8,5
+11,So you are not tired of this yet,Word 3,2,8
+11,So you are not tired of this yet,Word 4,8,6
+11,So you are not tired of this yet,Word 5,1,4
+11,So you are not tired of this yet,Word 6,1,8
+11,So you are not tired of this yet,Word 7,2,7
+11,So you are not tired of this yet,Word 8,5,4
+11,So you are not tired of this yet,Wall 1,0,0
+11,So you are not tired of this yet,Wall 2,3,0
+11,So you are not tired of this yet,Wall 3,5,0
+11,So you are not tired of this yet,Wall 4,6,0
+11,So you are not tired of this yet,Wall 5,7,0
+11,So you are not tired of this yet,Wall 6,0,0
+11,So you are not tired of this yet,Wall 7,9,0
+11,So you are not tired of this yet,Wall 8,9,1
+11,So you are not tired of this yet,Wall 9,0,2
+11,So you are not tired of this yet,Wall 10,9,2
+11,So you are not tired of this yet,Wall 11,0,3
+11,So you are not tired of this yet,Wall 12,9,3
+11,So you are not tired of this yet,Wall 13,9,4
+11,So you are not tired of this yet,Wall 14,0,5
+11,So you are not tired of this yet,Wall 15,9,7
+11,So you are not tired of this yet,Wall 16,9,8
+11,So you are not tired of this yet,Wall 17,0,9
+11,So you are not tired of this yet,Wall 18,9,9
+11,So you are not tired of this yet,Wall 19,4,2
+11,So you are not tired of this yet,Wall 20,8,4
+11,So you are not tired of this yet,Wall 21,1,5
+11,So you are not tired of this yet,Wall 22,7,7
+11,So you are not tired of this yet,Wall 23,1,6
+11,So you are not tired of this yet,Wall 24,7,9
+11,So you are not tired of this yet,Wall 25,6,5
+11,So you are not tired of this yet,Wall 26,6,8
+11,So you are not tired of this yet,Wall 27,3,8
+11,So you are not tired of this yet,Wall 28,4,3
+11,So you are not tired of this yet,Wall 29,8,3
+11,So you are not tired of this yet,Wall 30,4,1
+11,So you are not tired of this yet,Wall 31,6,6
+11,So you are not tired of this yet,Wall 32,7,1
+11,So you are not tired of this yet,Wall 33,4,9
+12,This one is for the fans,Word 1,7,7
+12,This one is for the fans,Word 2,9,2
+12,This one is for the fans,Word 3,8,0
+12,This one is for the fans,Word 4,9,0
+12,This one is for the fans,Word 5,5,4
+12,This one is for the fans,Word 6,9,1
+12,This one is for the fans,Wall 1,0,0
+12,This one is for the fans,Wall 2,1,0
+12,This one is for the fans,Wall 3,2,0
+12,This one is for the fans,Wall 4,3,0
+12,This one is for the fans,Wall 5,4,0
+12,This one is for the fans,Wall 6,5,0
+12,This one is for the fans,Wall 7,6,0
+12,This one is for the fans,Wall 8,0,1
+12,This one is for the fans,Wall 9,9,3
+12,This one is for the fans,Wall 10,0,5
+12,This one is for the fans,Wall 11,9,5
+12,This one is for the fans,Wall 12,0,9
+12,This one is for the fans,Wall 13,9,9
+12,This one is for the fans,Wall 14,3,9
+12,This one is for the fans,Wall 15,1,8
+12,This one is for the fans,Wall 16,8,3
+12,This one is for the fans,Wall 17,8,4
+12,This one is for the fans,Wall 18,4,5
+12,This one is for the fans,Wall 19,3,7
+12,This one is for the fans,Wall 20,0,7
+12,This one is for the fans,Wall 21,2,6
+12,This one is for the fans,Wall 22,7,2
+12,This one is for the fans,Wall 23,7,5
+12,This one is for the fans,Wall 24,9,8
+12,This one is for the fans,Wall 25,6,4
+12,This one is for the fans,Wall 26,5,1
+12,This one is for the fans,Wall 27,6,7
+12,This one is for the fans,Wall 28,2,9
+13,Make the most of your time on earth,Word 1,6,7
+13,Make the most of your time on earth,Word 2,4,9
+13,Make the most of your time on earth,Word 3,1,9
+13,Make the most of your time on earth,Word 4,1,7
+13,Make the most of your time on earth,Word 5,5,9
+13,Make the most of your time on earth,Word 6,6,9
+13,Make the most of your time on earth,Word 7,2,2
+13,Make the most of your time on earth,Word 8,1,1
+13,Make the most of your time on earth,Wall 1,3,0
+13,Make the most of your time on earth,Wall 2,4,0
+13,Make the most of your time on earth,Wall 3,5,0
+13,Make the most of your time on earth,Wall 4,6,0
+13,Make the most of your time on earth,Wall 5,7,0
+13,Make the most of your time on earth,Wall 6,8,0
+13,Make the most of your time on earth,Wall 7,9,0
+13,Make the most of your time on earth,Wall 8,0,0
+13,Make the most of your time on earth,Wall 9,9,0
+13,Make the most of your time on earth,Wall 10,9,2
+13,Make the most of your time on earth,Wall 11,0,3
+13,Make the most of your time on earth,Wall 12,9,3
+13,Make the most of your time on earth,Wall 13,0,4
+13,Make the most of your time on earth,Wall 14,9,4
+13,Make the most of your time on earth,Wall 15,0,8
+13,Make the most of your time on earth,Wall 16,9,8
+13,Make the most of your time on earth,Wall 17,9,9
+13,Make the most of your time on earth,Wall 18,7,5
+13,Make the most of your time on earth,Wall 19,5,1
+13,Make the most of your time on earth,Wall 20,3,8
+13,Make the most of your time on earth,Wall 21,7,2
+13,Make the most of your time on earth,Wall 22,7,8
+13,Make the most of your time on earth,Wall 23,4,4
+13,Make the most of your time on earth,Wall 24,7,9
+13,Make the most of your time on earth,Wall 25,8,4
+13,Make the most of your time on earth,Wall 26,5,3
+13,Make the most of your time on earth,Wall 27,6,3
+13,Make the most of your time on earth,Wall 28,7,4
+13,Make the most of your time on earth,Wall 29,9,5
+13,Make the most of your time on earth,Wall 30,5,5
+13,Make the most of your time on earth,Wall 31,4,7
+13,Make the most of your time on earth,Wall 32,2,7
+14,I dare you to speed run me,Word 1,1,1
+14,I dare you to speed run me,Word 2,3,5
+14,I dare you to speed run me,Word 3,5,1
+14,I dare you to speed run me,Word 4,7,1
+14,I dare you to speed run me,Word 5,8,2
+14,I dare you to speed run me,Word 6,7,9
+14,I dare you to speed run me,Word 7,5,3
+14,I dare you to speed run me,Wall 1,3,0
+14,I dare you to speed run me,Wall 2,9,0
+14,I dare you to speed run me,Wall 3,0,0
+14,I dare you to speed run me,Wall 4,9,0
+14,I dare you to speed run me,Wall 5,0,3
+14,I dare you to speed run me,Wall 6,0,4
+14,I dare you to speed run me,Wall 7,0,5
+14,I dare you to speed run me,Wall 8,0,7
+14,I dare you to speed run me,Wall 9,9,7
+14,I dare you to speed run me,Wall 10,0,8
+14,I dare you to speed run me,Wall 11,9,8
+14,I dare you to speed run me,Wall 12,0,9
+14,I dare you to speed run me,Wall 13,9,6
+14,I dare you to speed run me,Wall 14,7,6
+14,I dare you to speed run me,Wall 15,1,9
+14,I dare you to speed run me,Wall 16,3,4
+14,I dare you to speed run me,Wall 17,8,8
+14,I dare you to speed run me,Wall 18,2,2
+14,I dare you to speed run me,Wall 19,0,2
+14,I dare you to speed run me,Wall 20,1,6
+14,I dare you to speed run me,Wall 21,1,8
+14,I dare you to speed run me,Wall 22,6,9
+14,I dare you to speed run me,Wall 23,1,3
+14,I dare you to speed run me,Wall 24,4,4
+14,I dare you to speed run me,Wall 25,0,1
+14,I dare you to speed run me,Wall 26,7,4
+14,I dare you to speed run me,Wall 27,4,2
