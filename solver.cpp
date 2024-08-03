@@ -188,6 +188,9 @@ struct GameState { // Represents the state of the game at any point
 };
 
 #include <array>
+#include <queue>
+#include <unordered_map>
+#include <limits>
 
 const std::array<std::pair<std::string, Position>, 4> DIRECTIONS = {{ // Possible movement directions
     {"up", {-1, 0}},
@@ -195,6 +198,91 @@ const std::array<std::pair<std::string, Position>, 4> DIRECTIONS = {{ // Possibl
     {"left", {0, -1}},
     {"right", {0, 1}}
 }};
+
+// Heuristic function for A* algorithm
+int heuristic(const GameState& state, const GameState& goal_state) {
+    int total_distance = 0;
+    for (size_t i = 0; i < state.word_positions.size(); ++i) {
+        int min_distance = std::numeric_limits<int>::max();
+        for (const auto& possible_goal : goal_state.word_positions) {
+            int dx = std::abs(state.word_positions[i].first - possible_goal.first);
+            int dy = std::abs(state.word_positions[i].second - possible_goal.second);
+            min_distance = std::min(min_distance, dx + dy);
+        }
+        total_distance += min_distance;
+    }
+    return total_distance;
+}
+
+// A* algorithm implementation
+std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const GameState& initial_state) {
+    struct Node {
+        GameState state;
+        int g_cost;
+        int f_cost;
+        std::vector<std::pair<int, std::string>> path;
+
+        Node(GameState s, int g, int f, std::vector<std::pair<int, std::string>> p)
+            : state(s), g_cost(g), f_cost(f), path(std::move(p)) {}
+    };
+
+    struct CompareNode {
+        bool operator()(const Node& lhs, const Node& rhs) const {
+            return lhs.f_cost > rhs.f_cost;
+        }
+    };
+
+    std::priority_queue<Node, std::vector<Node>, CompareNode> open_list;
+    std::unordered_map<std::vector<Position>, int, VectorPositionHash> closed_list;
+
+    auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
+    
+    open_list.emplace(initial_state, 0, heuristic(initial_state, goal_states[0]), std::vector<std::pair<int, std::string>>());
+
+    int paths_traversed = 0;
+
+    while (!open_list.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
+        Node current = open_list.top();
+        open_list.pop();
+        paths_traversed++;
+
+        if (paths_traversed % 100000 == 0) {
+            std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed << std::endl;
+        }
+
+        if (std::find(goal_states.begin(), goal_states.end(), current.state) != goal_states.end()) {
+            std::cout << "Solution found: ";
+            for (const auto& move : current.path) {
+                std::cout << "(" << move.first << ", " << move.second << ") ";
+            }
+            std::cout << std::endl;
+            return {current.path, paths_traversed};
+        }
+
+        closed_list[current.state.word_positions] = current.g_cost;
+
+        for (int word_index = 0; word_index < current.state.word_positions.size(); ++word_index) {
+            for (const auto& [direction_name, direction] : DIRECTIONS) {
+                GameState new_state = current.state;
+                new_state.move_word(word_index, direction);
+
+                if (closed_list.find(new_state.word_positions) != closed_list.end()) {
+                    continue;
+                }
+
+                int new_g_cost = current.g_cost + 1;
+                int new_f_cost = new_g_cost + heuristic(new_state, goal_states[0]);
+
+                auto new_path = current.path;
+                new_path.emplace_back(word_index, direction_name);
+
+                open_list.emplace(new_state, new_g_cost, new_f_cost, std::move(new_path));
+            }
+        }
+    }
+
+    return {{}, paths_traversed};
+}
 
 std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
     std::vector<std::unique_ptr<GameState>> levels;
@@ -303,7 +391,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
     return {{}, paths_traversed};
 }
 
-void solve_level(const GameState& level_data) {
+void solve_level(const GameState& level_data, bool use_astar) {
     auto [possible_positions, goal_states] = level_data.calculate_possible_positions_and_goal_states();
     {
         std::lock_guard<std::mutex> lock(cout_mutex);
@@ -312,7 +400,14 @@ void solve_level(const GameState& level_data) {
     }
 
     auto start = std::chrono::high_resolution_clock::now();
-    auto result = solve_game(level_data);
+    std::pair<std::vector<std::pair<int, std::string>>, int> result;
+    
+    if (use_astar) {
+        result = solve_game_astar(level_data);
+    } else {
+        result = solve_game(level_data);
+    }
+    
     auto solution = result.first;
     auto paths_traversed = result.second;
     auto end = std::chrono::high_resolution_clock::now();
@@ -320,7 +415,7 @@ void solve_level(const GameState& level_data) {
 
     std::lock_guard<std::mutex> lock(cout_mutex);
     if (!solution.empty()) {
-        std::cout << "Solution for Level " << level_data.level << ": ";
+        std::cout << "Solution for Level " << level_data.level << " (" << (use_astar ? "A*" : "BFS") << "): ";
         for (const auto& move : solution) {
             std::cout << "(" << move.first << ", " << move.second << ") ";
         }
@@ -329,7 +424,7 @@ void solve_level(const GameState& level_data) {
         std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl;
         std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
     } else {
-        std::cout << "No solution found for Level " << level_data.level << std::endl;
+        std::cout << "No solution found for Level " << level_data.level << " (" << (use_astar ? "A*" : "BFS") << ")" << std::endl;
         std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
     }
     std::cout << std::endl;
@@ -339,10 +434,16 @@ void solve_level(const GameState& level_data) {
 int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
+    bool use_astar = false;
 
-    if (argc > 1) {
-        csv_file = "import2";
-        grid_size = {10, 10};
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "a") {
+            use_astar = true;
+        } else if (arg == "import2") {
+            csv_file = "import2";
+            grid_size = {10, 10};
+        }
     }
 
     auto levels = load_level_data(csv_file);
@@ -355,8 +456,8 @@ int main(int argc, char* argv[]) {
     // Use std::async to run solve_level in parallel for each level
     std::vector<std::future<void>> futures;
     for (const auto& level_data : levels) {
-        futures.push_back(std::async(std::launch::async, [&level_data]() {
-            solve_level(*level_data);
+        futures.push_back(std::async(std::launch::async, [&level_data, use_astar]() {
+            solve_level(*level_data, use_astar);
         }));
     }
 
