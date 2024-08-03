@@ -352,6 +352,7 @@ function initGame(isDemo = false) {
 
 function generateLevel(level) {
     try {
+        console.log(`Is Hard Mode: ${isHardMode}`); // Log the value of isHardMode
         const { gridSize } = gameState;
         if (!gridSize || typeof gridSize.rows !== 'number' || typeof gridSize.cols !== 'number') {
             throw new Error('Invalid grid size');
@@ -380,6 +381,7 @@ function generateLevel(level) {
         // Generate walls
         gameState.walls = [];
         if (isHardMode) {
+            console.log('Generating walls for hard mode');
             // Add walls all around the board in hard mode
             for (let row = 0; row < gridSize.rows; row++) {
                 gameState.walls.push({row, col: 0});
@@ -390,6 +392,7 @@ function generateLevel(level) {
                 gameState.walls.push({row: gridSize.rows - 1, col});
             }
         } else {
+            console.log('Generating walls for easy mode');
             // Calculate the number of walls based on the level for easy mode
             const totalCells = gridSize.rows * gridSize.cols;
             const wallPercentage = level === 0 ? 0.1 : 
