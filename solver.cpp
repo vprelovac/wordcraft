@@ -1,4 +1,4 @@
-// g++ -std=c++17 -O3 -o solver solver.cpp
+// g++ -std=c++20 -O3 -o solver solver.cpp
 
 #include <iostream>
 #include <fstream>
@@ -736,8 +736,8 @@ int main(int argc, char* argv[]) {
         } else if (arg == "h") {
             algorithm_choice = 2;
         }
-        if (arg == "import2") {
-            csv_file = "2";
+        if (arg == "2") {
+            csv_file = "import2";
             grid_size = {10, 10};
         }
     }
