@@ -339,10 +339,10 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
     return std::max({
         standard_heuristic(state, goal_state),
         goal_count_heuristic(state, goal_state),
-        nrp_heuristic(state, goal_state),
-        linear_conflict_heuristic(state, goal_state),
-        manhattan_sliding_heuristic(state, goal_state),
-        interaction_cost_heuristic(state, goal_state)
+        manhattan_sliding_heuristic(state, goal_state),        
+        //interaction_cost_heuristic(state, goal_state)
+        //linear_conflict_heuristic(state, goal_state),
+        //nrp_heuristic(state, goal_state),
     });
 }
 
