@@ -441,7 +441,10 @@ function generateLevel(level) {
         const wallPercentage = level <= 4 
             ? Math.max(WALL_PERCENTAGE_INITIAL - (level - 1) * WALL_PERCENTAGE_DECREASE, MIN_WALL_PERCENTAGE)
             : Math.min(WALL_PERCENTAGE_INITIAL + (level - 4) * WALL_PERCENTAGE_DECREASE, WALL_PERCENTAGE_INITIAL);
-        const numWalls = Math.floor(totalCells * wallPercentage);
+        let numWalls = Math.floor(totalCells * wallPercentage);
+        if (isHardMode) {
+            numWalls = Math.floor(numWalls * 0.7); // 30% fewer walls in hard mode
+        }
 
         gameState.walls = [];
 
