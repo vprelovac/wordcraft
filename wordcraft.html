@@ -619,12 +619,13 @@ function mulberry32(a) {
     }
 }
 
-function formatTime(milliseconds) {
+function formatTime(milliseconds, showMs = false) {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     const ms = milliseconds % 1000;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+    const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return showMs ? `${timeString}.${ms.toString().padStart(3, '0')}` : timeString;
 }
 
 function isOutOfBounds({ row, col }, gridSize) {
@@ -840,7 +841,7 @@ function findCorrectWordPositions() {
 }
 
 function updateTimerDisplay() {
-    document.querySelector('#timer span').textContent = formatTime(gameState.timer);
+    document.querySelector('#timer span').textContent = formatTime(gameState.timer, false);
 }
 
 function updateMovesDisplay() {
@@ -1206,7 +1207,7 @@ function showLevelCompletionAnimation() {
         const greenClass = isMinimum ? 'text-green-500 font-bold' : '';
 
         content += `
-            <p class="text-xl mb-2">Time Taken: ${formatTime(gameState.timer)}</p>
+            <p class="text-xl mb-2">Time Taken: ${formatTime(gameState.timer, true)}</p>
             <p class="text-xl mb-2">Moves: ${gameState.moves} ${isMinimum ? '<span class="text-green-500 font-bold">(Minimum!)</span>' : ''}</p>
             <p class="text-xl mb-2 ${greenClass}">Minimum Moves: ${currentLevel.minMoves > 0 ? currentLevel.minMoves : '?'}</p>
             <p class="text-xl mb-2 ${isBest ? 'text-blue-500 font-bold' : ''}">Your Best: ${isBest ? gameState.moves : bestMoves}</p>
