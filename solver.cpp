@@ -127,6 +127,16 @@ struct GameState { // Represents the state of the game at any point
         std::vector<std::vector<Position>> goal_states;
         int sentence_length = words.size();
 
+        // Helper function to check if a sequence of positions is valid (no walls)
+        auto is_valid_sequence = [this](const std::vector<Position>& sequence) {
+            for (const auto& pos : sequence) {
+                if (is_wall(pos)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         // Generate horizontal goal states (both left-to-right and right-to-left)
         for (int row = 0; row < grid_size.row; ++row) {
             for (int col = 0; col <= grid_size.col - sentence_length; ++col) {
@@ -134,9 +144,12 @@ struct GameState { // Represents the state of the game at any point
                 for (int i = 0; i < sentence_length; ++i) {
                     goal_state.push_back({row, col + i});
                 }
-                goal_states.push_back(goal_state);
-                std::reverse(goal_state.begin(), goal_state.end());
-                goal_states.push_back(goal_state);
+                if (is_valid_sequence(goal_state)) {
+                    goal_states.push_back(goal_state);
+                    std::vector<Position> reversed_goal_state = goal_state;
+                    std::reverse(reversed_goal_state.begin(), reversed_goal_state.end());
+                    goal_states.push_back(reversed_goal_state);
+                }
             }
         }
 
@@ -147,9 +160,12 @@ struct GameState { // Represents the state of the game at any point
                 for (int i = 0; i < sentence_length; ++i) {
                     goal_state.push_back({row + i, col});
                 }
-                goal_states.push_back(goal_state);
-                std::reverse(goal_state.begin(), goal_state.end());
-                goal_states.push_back(goal_state);
+                if (is_valid_sequence(goal_state)) {
+                    goal_states.push_back(goal_state);
+                    std::vector<Position> reversed_goal_state = goal_state;
+                    std::reverse(reversed_goal_state.begin(), reversed_goal_state.end());
+                    goal_states.push_back(reversed_goal_state);
+                }
             }
         }
 
