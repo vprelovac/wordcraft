@@ -373,7 +373,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
 
     std::queue<Node> bfs_queue;
     std::priority_queue<Node, std::vector<Node>, CompareNode> astar_queue;
-    std::unordered_map<std::vector<Position>, int, VectorPositionHash> closed_list;
+    std::unordered_set<std::vector<Position>, VectorPositionHash> closed_list;
 
     auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
     
@@ -388,8 +388,8 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
     bfs_queue.push(initial_node);
 
     int paths_traversed = 0;
-    int bfs_depth = 20;  // Increased initial BFS depth
-    int astar_steps = 50;  // Reduced number of A* steps before considering switching
+    int bfs_depth = 30;  // Increased initial BFS depth
+    int astar_steps = 100;  // Reduced number of A* steps before considering switching
     bool using_astar = false;
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -440,7 +440,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
                 int new_g_cost = current.g_cost + 1;
                 int new_f_cost = new_g_cost + combined_heuristic(new_state, goal_states[0]);
 
-                auto new_path = current.path;
+                std::vector<std::pair<int, std::string>> new_path = current.path;
                 new_path.emplace_back(word_index, direction_name);
 
                 double new_tie_breaker = 0.0;
