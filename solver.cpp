@@ -388,12 +388,13 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
     bfs_queue.push(initial_node);
 
     int paths_traversed = 0;
-    int bfs_depth = 5;  // Initial BFS depth
-    int astar_steps = 100;  // Number of A* steps before considering switching
+    int bfs_depth = 20;  // Increased initial BFS depth
+    int astar_steps = 50;  // Reduced number of A* steps before considering switching
     bool using_astar = false;
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0, 1);
+    const int MAX_ASTAR_QUEUE_SIZE = 10000;  // Limit A* queue size
 
     while ((!bfs_queue.empty() || !astar_queue.empty()) && paths_traversed < MAX_PATHS_TRAVERSED) {
         Node current;
@@ -411,7 +412,9 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
         paths_traversed++;
 
         if (paths_traversed % 100000 == 0) {
-            std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed << " (Using " << (using_astar ? "A*" : "BFS") << ")" << std::endl;
+            std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed 
+                      << " (Using " << (using_astar ? "A*" : "BFS") << "), BFS queue: " << bfs_queue.size() 
+                      << ", A* queue: " << astar_queue.size() << std::endl;
         }
 
         if (std::find(goal_states.begin(), goal_states.end(), current.state) != goal_states.end()) {
@@ -450,29 +453,32 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
                 Node new_node(new_state, new_g_cost, new_f_cost, new_tie_breaker, std::move(new_path));
 
                 if (using_astar) {
-                    astar_queue.push(std::move(new_node));
+                    if (astar_queue.size() < MAX_ASTAR_QUEUE_SIZE) {
+                        astar_queue.push(std::move(new_node));
+                    }
                 } else {
                     bfs_queue.push(std::move(new_node));
                 }
             }
         }
 
-        // Switch between BFS and A*
+        // Dynamic switching between BFS and A*
         if (!using_astar && bfs_queue.size() > bfs_depth) {
             using_astar = true;
-            while (!bfs_queue.empty()) {
+            while (!bfs_queue.empty() && astar_queue.size() < MAX_ASTAR_QUEUE_SIZE) {
                 astar_queue.push(bfs_queue.front());
                 bfs_queue.pop();
             }
         } else if (using_astar && paths_traversed % astar_steps == 0) {
-            // Randomly decide whether to switch back to BFS
-            if (dis(gen) < 0.1) {  // 10% chance to switch
+            // Dynamically adjust the probability of switching back to BFS
+            double switch_probability = std::min(0.5, static_cast<double>(astar_queue.size()) / MAX_ASTAR_QUEUE_SIZE);
+            if (dis(gen) < switch_probability) {
                 using_astar = false;
                 while (!astar_queue.empty()) {
                     bfs_queue.push(astar_queue.top());
                     astar_queue.pop();
                 }
-                bfs_depth = bfs_queue.size() + 10;  // Increase BFS depth
+                bfs_depth = std::max(bfs_depth, static_cast<int>(bfs_queue.size()) + 10);  // Increase BFS depth
             }
         }
     }
