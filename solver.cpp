@@ -10,9 +10,14 @@
 #include <thread>
 #include <mutex>
 #include <iomanip>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 const int MAX_PATH_LENGTH = 59; // Maximum allowed path length to avoid infinite loops
 const int MAX_PATHS_TRAVERSED = 10000000; // Maximum number of paths to traverse to avoid excessive computation
+
+std::mutex cout_mutex; // Mutex for thread-safe console output
 
 struct Position { // Represents a position in the grid
     int row, col;
@@ -355,38 +360,51 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
     return {{}, paths_traversed}; // Return an empty solution if no solution is found
 }
 
-int main() { // Main function to load levels and solve them
-    std::string csv_file = "import";
-    Position grid_size = {8, 8}; // Assuming a grid size of 8x8
-    auto levels = load_level_data(csv_file); // Load level data from the CSV file
-
-    for (const auto& level_data : levels) {
-        int possible_positions = calculate_possible_positions(level_data); // Calculate possible positions for the target sentence
+void solve_level(const GameState& level_data) {
+    int possible_positions = calculate_possible_positions(level_data);
+    {
+        std::lock_guard<std::mutex> lock(cout_mutex);
         std::cout << "Solving Level " << level_data.level << std::endl;
         std::cout << "Possible positions for sentence: " << possible_positions << std::endl;
-
-        auto start = std::chrono::high_resolution_clock::now(); // Start time for performance measurement
-        auto result = solve_game(level_data); // Solve the game for the current level
-        auto solution = result.first; // Extract the solution path
-        auto paths_traversed = result.second;
-        auto end = std::chrono::high_resolution_clock::now(); // End time for performance measurement
-        std::chrono::duration<double> time_taken = end - start; // Calculate the time taken to solve the level
-
-        if (!solution.empty()) { // If a solution is found, print it
-            std::cout << "Solution for Level " << level_data.level << ": ";
-            for (const auto& move : solution) {
-                std::cout << "(" << move.first << ", " << move.second << ") ";
-            }
-            std::cout << std::endl;
-            std::cout << "Minimum moves for Level " << level_data.level << ": " << solution.size() << std::endl; // Print the number of moves
-            std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl; // Print the time taken
-            std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl; // Print the number of paths traversed
-        } else {
-            std::cout << "No solution found for Level " << level_data.level << std::endl; // If no solution is found, print a message
-            std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
-        }
-        std::cout << std::endl; // Add a blank line between levels for better readability
     }
 
-    return 0; // Return success
+    auto start = std::chrono::high_resolution_clock::now();
+    auto result = solve_game(level_data);
+    auto solution = result.first;
+    auto paths_traversed = result.second;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> time_taken = end - start;
+
+    std::lock_guard<std::mutex> lock(cout_mutex);
+    if (!solution.empty()) {
+        std::cout << "Solution for Level " << level_data.level << ": ";
+        for (const auto& move : solution) {
+            std::cout << "(" << move.first << ", " << move.second << ") ";
+        }
+        std::cout << std::endl;
+        std::cout << "Minimum moves for Level " << level_data.level << ": " << solution.size() << std::endl;
+        std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl;
+        std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
+    } else {
+        std::cout << "No solution found for Level " << level_data.level << std::endl;
+        std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+int main() {
+    std::string csv_file = "import";
+    Position grid_size = {8, 8};
+    auto levels = load_level_data(csv_file);
+
+    std::vector<std::thread> threads;
+    for (const auto& level_data : levels) {
+        threads.emplace_back(solve_level, level_data);
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    return 0;
 }
