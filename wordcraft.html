@@ -249,13 +249,13 @@ const easyLevels = [
     { sentence: "The quick brown fox", seed: 12345, minMoves: 11 },
     { sentence: "Jumps over the lazy dog", seed: 67894, minMoves: 8 },
     { sentence: "Better late than never friend", seed: 7788, minMoves: 9 },
-    { sentence: "Make hay while the sun shines", seed: 13579, minMoves: 0 },
-    { sentence: "A stitch in time saves nine", seed: 24226, minMoves: 0 },
+    { sentence: "Make hay while the sun shines", seed: 13579, minMoves: 20 },
+    { sentence: "A stitch in time saves nine", seed: 24226, minMoves: 21 },
     { sentence: "Actions speak louder than words", seed: 11224, minMoves: 10 },
-    { sentence: "All that glitters is not gold", seed: 447, minMoves: 0 },
-    { sentence: "A rolling stone gathers no moss", seed: 91, minMoves: 0 },
-    { sentence: "Fortune always favors the brave soul", seed: 1321, minMoves: 0 },
-    { sentence: "Practice makes perfect or at least less bad", seed: 46, minMoves: 0 },
+    { sentence: "All that glitters is not gold", seed: 447, minMoves: 25 },
+    { sentence: "A rolling stone gathers no moss", seed: 91, minMoves: 25 },
+    { sentence: "Fortune always favors the brave soul", seed: 1321, minMoves: 21 },
+    { sentence: "Practice makes perfect or at least less bad", seed: 46, minMoves: 29 },
     { sentence: "So you are not tired of this yet", seed: 28, minMoves: 0 },
     { sentence: "This one is for the fans", seed: 12345678, minMoves: 0 },
     { sentence: "Make the most of your time on earth", seed: 12345, minMoves: 0 },
@@ -1290,16 +1290,18 @@ function showLevelCompletionAnimation() {
         const currentLevel = levels[gameState.level - 1];
         const modePrefix = isHardMode ? 'hard_' : '';
         const bestMoves = localStorage.getItem(`${modePrefix}bestMoves_level${gameState.level}`);
-        const isMinimum = currentLevel.minMoves > 0 && gameState.moves === currentLevel.minMoves;
+        const isKnownMinimum = currentLevel.minMoves > 0 && gameState.moves === currentLevel.minMoves;
+        const isBeatKnownMinimum = currentLevel.minMoves > 0 && gameState.moves < currentLevel.minMoves;
         const isBest = !bestMoves || gameState.moves <= parseInt(bestMoves);
-        const greenClass = isMinimum ? 'text-green-500 font-bold' : '';
+        const greenClass = isKnownMinimum || isBeatKnownMinimum ? 'text-green-500 font-bold' : '';
 
         content += `
             <p class="text-xl mb-2">Time Taken: ${formatTime(gameState.timer, true)}</p>
-            <p class="text-xl mb-2">Moves: ${gameState.moves} ${isMinimum ? '<span class="text-green-500 font-bold">(Minimum!)</span>' : ''}</p>
-            <p class="text-xl mb-2 ${greenClass}">Minimum Moves: ${currentLevel.minMoves > 0 ? currentLevel.minMoves : '?'}</p>
+            <p class="text-xl mb-2">Moves: ${gameState.moves} ${isKnownMinimum ? '<span class="text-green-500 font-bold">(Known Minimum!)</span>' : ''}</p>
+            <p class="text-xl mb-2 ${greenClass}">Known Minimum Moves: ${currentLevel.minMoves > 0 ? currentLevel.minMoves + '?' : '?'}</p>
             <p class="text-xl mb-2 ${isBest ? 'text-blue-500 font-bold' : ''}">Your Best: ${bestMoves ? bestMoves : gameState.moves}</p>
-            ${isMinimum ? '<p class="text-xl mb-2 text-green-500 font-bold">Congratulations! You achieved the minimum moves!</p>' : ''}
+            ${isKnownMinimum ? '<p class="text-xl mb-2 text-green-500 font-bold">Congratulations! You achieved the known minimum moves!</p>' : ''}
+            ${isBeatKnownMinimum ? '<p class="text-xl mb-2 text-green-500 font-bold">Incredible! You beat the known minimum moves!</p>' : ''}
             ${isBest ? '<p class="text-xl mb-2 text-blue-500 font-bold">New personal best!</p>' : ''}`
     }
     
