@@ -1,4 +1,4 @@
-// g++ -std=c++11 -O3 -o solver solver.cpp
+// g++ -std=c++17 -O3 -o solver solver.cpp
 
 #include <iostream>
 #include <fstream>
