@@ -487,6 +487,7 @@ function generateHardModeLevel(level) {
                 }
             } while (isPositionOccupied(position) || isPositionIsolated(position) || 
                      (position.row === 0 || position.row === 9 || position.col === 0 || position.col === 9) ||
+                     gameState.walls.some(w => w.row === position.row && w.col === position.col) ||
                      gameState.walls.some(w => w.row === position.row && w.col === position.col));
             gameState.wordPositions.push(position);
         });
