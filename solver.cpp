@@ -256,14 +256,18 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const 
         GameState state;
         int g_cost;
         int f_cost;
+        double tie_breaker;
         std::vector<std::pair<int, std::string>> path;
 
-        Node(GameState s, int g, int f, std::vector<std::pair<int, std::string>> p)
-            : state(s), g_cost(g), f_cost(f), path(std::move(p)) {}
+        Node(GameState s, int g, int f, double tb, std::vector<std::pair<int, std::string>> p)
+            : state(s), g_cost(g), f_cost(f), tie_breaker(tb), path(std::move(p)) {}
     };
 
     struct CompareNode {
         bool operator()(const Node& lhs, const Node& rhs) const {
+            if (lhs.f_cost == rhs.f_cost) {
+                return lhs.tie_breaker > rhs.tie_breaker;
+            }
             return lhs.f_cost > rhs.f_cost;
         }
     };
@@ -273,7 +277,14 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const 
 
     auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
     
-    open_list.emplace(initial_state, 0, combined_heuristic(initial_state, goal_states[0]), std::vector<std::pair<int, std::string>>());
+    double initial_tie_breaker = 0.0;
+    for (size_t i = 0; i < initial_state.word_positions.size(); ++i) {
+        initial_tie_breaker += std::abs(initial_state.word_positions[i].first - goal_states[0].word_positions[i].first) +
+                               std::abs(initial_state.word_positions[i].second - goal_states[0].word_positions[i].second);
+    }
+    initial_tie_breaker /= 1000.0; // Scale down the tie-breaker value
+
+    open_list.emplace(initial_state, 0, combined_heuristic(initial_state, goal_states[0]), initial_tie_breaker, std::vector<std::pair<int, std::string>>());
 
     int paths_traversed = 0;
 
@@ -312,7 +323,14 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const 
                 auto new_path = current.path;
                 new_path.emplace_back(word_index, direction_name);
 
-                open_list.emplace(new_state, new_g_cost, new_f_cost, std::move(new_path));
+                double new_tie_breaker = 0.0;
+                for (size_t i = 0; i < new_state.word_positions.size(); ++i) {
+                    new_tie_breaker += std::abs(new_state.word_positions[i].first - goal_states[0].word_positions[i].first) +
+                                       std::abs(new_state.word_positions[i].second - goal_states[0].word_positions[i].second);
+                }
+                new_tie_breaker /= 1000.0; // Scale down the tie-breaker value
+
+                open_list.emplace(new_state, new_g_cost, new_f_cost, new_tie_breaker, std::move(new_path));
             }
         }
     }
