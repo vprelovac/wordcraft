@@ -359,6 +359,7 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
 
 // A* algorithm implementation
 BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark) {
+    auto start_time = std::chrono::high_resolution_clock::now();
     struct Node {
         GameState state;
         int g_cost;
@@ -433,7 +434,9 @@ BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark
                 std::cout << "(" << move.first << ", " << move.second << ") ";
             }
             std::cout << std::endl;
-            return {std::chrono::duration<double>(0), std::chrono::duration<double>(0), paths_traversed, current.path};
+            auto end_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> total_time = end_time - start_time;
+            return {total_time, std::chrono::duration<double>(0), paths_traversed, current.path};
         }
 
         closed_list[current.state.word_positions] = current.g_cost;
@@ -493,10 +496,13 @@ BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark
         }
     }
 
-    return {std::chrono::duration<double>(0), std::chrono::duration<double>(0), paths_traversed, {}};
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_time = end_time - start_time;
+    return {total_time, std::chrono::duration<double>(0), paths_traversed, {}};
 }
 
 BenchmarkResult solve_game_astar(const GameState& initial_state, bool benchmark) {
+    auto start_time = std::chrono::high_resolution_clock::now();
     struct Node {
         GameState state;
         int g_cost;
@@ -548,7 +554,9 @@ BenchmarkResult solve_game_astar(const GameState& initial_state, bool benchmark)
                 std::cout << "(" << move.first << ", " << move.second << ") ";
             }
             std::cout << std::endl;
-            return {current.path, paths_traversed};
+            auto end_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> total_time = end_time - start_time;
+            return {total_time, std::chrono::duration<double>(0), paths_traversed, current.path};
         }
 
         closed_list[current.state.word_positions] = current.g_cost;
@@ -709,7 +717,9 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
         }
     }
 
-    return {{}, paths_traversed};
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_time = end_time - start_time;
+    return {total_time, std::chrono::duration<double>(0), paths_traversed, {}};
 }
 
 void solve_level(const GameState& level_data, int algorithm_choice, bool benchmark) {
