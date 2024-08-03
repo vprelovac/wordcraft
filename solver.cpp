@@ -593,8 +593,8 @@ SolveResult solve_game_bfs(const GameState& initial_state, int max_depth = MAX_P
 SolveResult solve_level_hybrid(const GameState& level_data) {
     std::cout << "Starting hybrid solve for Level " << level_data.level << std::endl;
     
-    // First, try BFS with depth limit 15
-    auto bfs_result = solve_game_bfs(level_data, 15, MAX_PATHS_TRAVERSED);
+    // First, try BFS with depth limit 12
+    auto bfs_result = solve_game_bfs(level_data, 12, MAX_PATHS_TRAVERSED);
     if (!bfs_result.solution.empty()) {
         std::cout << "BFS found a solution for Level " << level_data.level << std::endl;
         return bfs_result;
