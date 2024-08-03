@@ -58,6 +58,10 @@ struct GameState { // Represents the state of the game at any point
                std::find(walls.begin(), walls.end(), pos) != walls.end();
     }
 
+    bool is_wall(const Position& pos) const { // Check if a position is occupied by a wall
+        return std::find(walls.begin(), walls.end(), pos) != walls.end();
+    }
+
     bool is_out_of_bounds(const Position& pos) const { // Check if a position is out of the grid bounds
         return pos.row < 0 || pos.row >= grid_size.row || pos.col < 0 || pos.col >= grid_size.col;
     }
@@ -211,7 +215,7 @@ int calculate_possible_positions(const GameState& state) { // Calculate the numb
         for (int col = 0; col <= state.grid_size.col - sentence_length; ++col) {
             bool valid = true;
             for (int i = 0; i < sentence_length; ++i) {
-                if (state.is_position_occupied({row, col + i})) {
+                if (state.is_wall({row, col + i})) {
                     valid = false;
                     break;
                 }
@@ -228,7 +232,7 @@ int calculate_possible_positions(const GameState& state) { // Calculate the numb
         for (int row = 0; row <= state.grid_size.row - sentence_length; ++row) {
             bool valid = true;
             for (int i = 0; i < sentence_length; ++i) {
-                if (state.is_position_occupied({row + i, col})) {
+                if (state.is_wall({row + i, col})) {
                     valid = false;
                     break;
                 }
