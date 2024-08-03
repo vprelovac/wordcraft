@@ -67,45 +67,7 @@ struct GameState { // Represents the state of the game at any point
         word_positions[word_index] = current_position;
     }
 
-    bool is_solved() const { // Check if the current state matches the target sentence
-        // Check horizontal arrangement of words
-        for (int row = 0; row < grid_size.first; ++row) {
-            std::vector<std::string> row_words;
-            for (int col = 0; col < grid_size.second; ++col) {
-                auto it = std::find(word_positions.begin(), word_positions.end(), Position{row, col});
-                if (it != word_positions.end()) {
-                    row_words.push_back(words[it - word_positions.begin()]);
-                } else {
-                    if (!row_words.empty()) break;
-                }
-            }
-            std::string joined_row_words = join_words(row_words);
-            if (joined_row_words == target_sentence || joined_row_words == reversed_target_sentence) {
-                return true;
-            }
-        }
-
-        // Check vertical arrangement of words
-        for (int col = 0; col < grid_size.second; ++col) {
-            std::vector<std::string> col_words;
-            for (int row = 0; row < grid_size.first; ++row) {
-                auto it = std::find(word_positions.begin(), word_positions.end(), Position{row, col});
-                if (it != word_positions.end()) {
-                    col_words.push_back(words[it - word_positions.begin()]);
-                } else {
-                    if (!col_words.empty()) break;
-                }
-            }
-            std::string joined_col_words = join_words(col_words);
-            if (joined_col_words == target_sentence || joined_col_words == reversed_target_sentence) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    bool is_solved_precalculated(const std::vector<std::vector<Position>>& goal_positions) const {
+    bool is_solved(const std::vector<std::vector<Position>>& goal_positions) const {
         return std::find(goal_positions.begin(), goal_positions.end(), word_positions) != goal_positions.end();
     }
 
@@ -623,7 +585,7 @@ std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_f
 }
 
 
-SolveResult solve_game(const GameState& initial_state) {
+SolveResult solve_game_bfs(const GameState& initial_state) {
     struct VectorPositionHash {
         std::size_t operator()(const std::vector<Position>& vec) const {
             std::size_t seed = vec.size();
@@ -665,8 +627,7 @@ SolveResult solve_game(const GameState& initial_state) {
         GameState current_state = search_queue.front();
         search_queue.pop();
 
-        if (current_state.is_solved_precalculated(goal_positions)) {
-//        } else if (current_state.is_solved()) {    
+        if (current_state.is_solved(goal_positions)) {
             auto path = visited[current_state.word_positions];
             std::cout << "Solution found: ";
             for (const auto& move : path) {
@@ -712,7 +673,7 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
     
     switch (algorithm_choice) {
         case 0:
-            result = solve_game(level_data);
+            result = solve_game_bfs(level_data);
             break;
         case 1:
             result = solve_game_astar(level_data);
@@ -721,7 +682,7 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
             result = solve_game_hybrid(level_data);
             break;
         default:
-            result = solve_game(level_data);
+            result = solve_game_bfs(level_data);
     }
     
     auto solution = result.solution;
