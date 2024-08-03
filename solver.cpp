@@ -16,7 +16,7 @@
 #include <future>
 #include <iterator>
 
-const int MAX_PATH_LENGTH = 29; // Maximum allowed path length to avoid infinite loops
+const int MAX_PATH_LENGTH = 59; // Maximum allowed path length to avoid infinite loops
 const int MAX_PATHS_TRAVERSED = 20000000; // Maximum number of paths to traverse to avoid excessive computation
 
 std::mutex cout_mutex; // Mutex for thread-safe console output
@@ -399,7 +399,7 @@ BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark
     bfs_queue.push(initial_node);
 
     int paths_traversed = 0;
-    int bfs_depth = 30;  // Increased initial BFS depth
+    int bfs_depth = 20;  // Increased initial BFS depth
     int astar_steps = 100;  // Reduced number of A* steps before considering switching
     bool using_astar = false;
     std::random_device rd;
@@ -690,6 +690,7 @@ BenchmarkResult solve_game(const GameState& initial_state, bool benchmark = fals
                 return {original_time, precalculated_time, paths_traversed, path};
             }
         } else if (current_state.is_solved_precalculated(goal_positions)) {
+//        } else if (current_state.is_solved()) {    
             auto path = visited[current_state.word_positions];
             std::cout << "Solution found: ";
             for (const auto& move : path) {
