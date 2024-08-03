@@ -200,6 +200,7 @@ struct GameState { // Represents the state of the game at any point
 #include <queue>
 #include <unordered_map>
 #include <limits>
+#include <random>
 
 // Forward declarations
 bool has_realizable_path(const Position& start, const Position& goal, const GameState& state);
@@ -347,6 +348,136 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
 }
 
 // A* algorithm implementation
+std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const GameState& initial_state) {
+    struct Node {
+        GameState state;
+        int g_cost;
+        int f_cost;
+        double tie_breaker;
+        std::vector<std::pair<int, std::string>> path;
+
+        Node(GameState s, int g, int f, double tb, std::vector<std::pair<int, std::string>> p)
+            : state(s), g_cost(g), f_cost(f), tie_breaker(tb), path(std::move(p)) {}
+    };
+
+    struct CompareNode {
+        bool operator()(const Node& lhs, const Node& rhs) const {
+            if (lhs.f_cost == rhs.f_cost) {
+                return lhs.tie_breaker > rhs.tie_breaker;
+            }
+            return lhs.f_cost > rhs.f_cost;
+        }
+    };
+
+    std::queue<Node> bfs_queue;
+    std::priority_queue<Node, std::vector<Node>, CompareNode> astar_queue;
+    std::unordered_map<std::vector<Position>, int, VectorPositionHash> closed_list;
+
+    auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
+    
+    double initial_tie_breaker = 0.0;
+    for (size_t i = 0; i < initial_state.word_positions.size(); ++i) {
+        initial_tie_breaker += std::abs(initial_state.word_positions[i].first - goal_states[0].word_positions[i].first) +
+                               std::abs(initial_state.word_positions[i].second - goal_states[0].word_positions[i].second);
+    }
+    initial_tie_breaker /= 1000.0;
+
+    Node initial_node(initial_state, 0, combined_heuristic(initial_state, goal_states[0]), initial_tie_breaker, std::vector<std::pair<int, std::string>>());
+    bfs_queue.push(initial_node);
+
+    int paths_traversed = 0;
+    int bfs_depth = 5;  // Initial BFS depth
+    int astar_steps = 100;  // Number of A* steps before considering switching
+    bool using_astar = false;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+
+    while ((!bfs_queue.empty() || !astar_queue.empty()) && paths_traversed < MAX_PATHS_TRAVERSED) {
+        Node current;
+        if (using_astar && !astar_queue.empty()) {
+            current = astar_queue.top();
+            astar_queue.pop();
+        } else if (!bfs_queue.empty()) {
+            current = bfs_queue.front();
+            bfs_queue.pop();
+        } else {
+            using_astar = true;
+            continue;
+        }
+
+        paths_traversed++;
+
+        if (paths_traversed % 100000 == 0) {
+            std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed << " (Using " << (using_astar ? "A*" : "BFS") << ")" << std::endl;
+        }
+
+        if (std::find(goal_states.begin(), goal_states.end(), current.state) != goal_states.end()) {
+            std::cout << "Solution found: ";
+            for (const auto& move : current.path) {
+                std::cout << "(" << move.first << ", " << move.second << ") ";
+            }
+            std::cout << std::endl;
+            return {current.path, paths_traversed};
+        }
+
+        closed_list[current.state.word_positions] = current.g_cost;
+
+        for (int word_index = 0; word_index < current.state.word_positions.size(); ++word_index) {
+            for (const auto& [direction_name, direction] : DIRECTIONS) {
+                GameState new_state = current.state;
+                new_state.move_word(word_index, direction);
+
+                if (closed_list.find(new_state.word_positions) != closed_list.end()) {
+                    continue;
+                }
+
+                int new_g_cost = current.g_cost + 1;
+                int new_f_cost = new_g_cost + combined_heuristic(new_state, goal_states[0]);
+
+                auto new_path = current.path;
+                new_path.emplace_back(word_index, direction_name);
+
+                double new_tie_breaker = 0.0;
+                for (size_t i = 0; i < new_state.word_positions.size(); ++i) {
+                    new_tie_breaker += std::abs(new_state.word_positions[i].first - goal_states[0].word_positions[i].first) +
+                                       std::abs(new_state.word_positions[i].second - goal_states[0].word_positions[i].second);
+                }
+                new_tie_breaker /= 1000.0;
+
+                Node new_node(new_state, new_g_cost, new_f_cost, new_tie_breaker, std::move(new_path));
+
+                if (using_astar) {
+                    astar_queue.push(std::move(new_node));
+                } else {
+                    bfs_queue.push(std::move(new_node));
+                }
+            }
+        }
+
+        // Switch between BFS and A*
+        if (!using_astar && bfs_queue.size() > bfs_depth) {
+            using_astar = true;
+            while (!bfs_queue.empty()) {
+                astar_queue.push(bfs_queue.front());
+                bfs_queue.pop();
+            }
+        } else if (using_astar && paths_traversed % astar_steps == 0) {
+            // Randomly decide whether to switch back to BFS
+            if (dis(gen) < 0.1) {  // 10% chance to switch
+                using_astar = false;
+                while (!astar_queue.empty()) {
+                    bfs_queue.push(astar_queue.top());
+                    astar_queue.pop();
+                }
+                bfs_depth = bfs_queue.size() + 10;  // Increase BFS depth
+            }
+        }
+    }
+
+    return {{}, paths_traversed};
+}
+
 std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const GameState& initial_state) {
     struct Node {
         GameState state;
@@ -541,7 +672,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
     return {{}, paths_traversed};
 }
 
-void solve_level(const GameState& level_data, bool use_astar) {
+void solve_level(const GameState& level_data, int algorithm_choice) {
     auto [possible_positions, goal_states] = level_data.calculate_possible_positions_and_goal_states();
     {
         std::lock_guard<std::mutex> lock(cout_mutex);
@@ -552,10 +683,18 @@ void solve_level(const GameState& level_data, bool use_astar) {
     auto start = std::chrono::high_resolution_clock::now();
     std::pair<std::vector<std::pair<int, std::string>>, int> result;
     
-    if (use_astar) {
-        result = solve_game_astar(level_data);
-    } else {
-        result = solve_game(level_data);
+    switch (algorithm_choice) {
+        case 0:
+            result = solve_game(level_data);
+            break;
+        case 1:
+            result = solve_game_astar(level_data);
+            break;
+        case 2:
+            result = solve_game_hybrid(level_data);
+            break;
+        default:
+            result = solve_game(level_data);
     }
     
     auto solution = result.first;
@@ -565,7 +704,8 @@ void solve_level(const GameState& level_data, bool use_astar) {
 
     std::lock_guard<std::mutex> lock(cout_mutex);
     if (!solution.empty()) {
-        std::cout << "Solution for Level " << level_data.level << " (" << (use_astar ? "A*" : "BFS") << "): ";
+        std::cout << "Solution for Level " << level_data.level << " (" 
+                  << (algorithm_choice == 0 ? "BFS" : (algorithm_choice == 1 ? "A*" : "Hybrid")) << "): ";
         for (const auto& move : solution) {
             std::cout << "(" << level_data.words[move.first] << ", " << move.second << ") ";
         }
@@ -574,7 +714,8 @@ void solve_level(const GameState& level_data, bool use_astar) {
         std::cout << "Time taken for Level " << level_data.level << ": " << time_taken.count() << " seconds" << std::endl;
         std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
     } else {
-        std::cout << "No solution found for Level " << level_data.level << " (" << (use_astar ? "A*" : "BFS") << ")" << std::endl;
+        std::cout << "No solution found for Level " << level_data.level << " (" 
+                  << (algorithm_choice == 0 ? "BFS" : (algorithm_choice == 1 ? "A*" : "Hybrid")) << ")" << std::endl;
         std::cout << "Paths traversed for Level " << level_data.level << ": " << paths_traversed << std::endl;
     }
     std::cout << std::endl;
@@ -584,12 +725,14 @@ void solve_level(const GameState& level_data, bool use_astar) {
 int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
-    bool use_astar = false;
+    int algorithm_choice = 0; // 0 for BFS, 1 for A*, 2 for Hybrid
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "a") {
-            use_astar = true;
+            algorithm_choice = 1;
+        } else if (arg == "h") {
+            algorithm_choice = 2;
         }
         if (arg == "import2") {
             csv_file = "2";
@@ -607,8 +750,8 @@ int main(int argc, char* argv[]) {
     // Use std::async to run solve_level in parallel for each level
     std::vector<std::future<void>> futures;
     for (const auto& level_data : levels) {
-        futures.push_back(std::async(std::launch::async, [&level_data, use_astar]() {
-            solve_level(*level_data, use_astar);
+        futures.push_back(std::async(std::launch::async, [&level_data, algorithm_choice]() {
+            solve_level(*level_data, algorithm_choice);
         }));
     }
 
