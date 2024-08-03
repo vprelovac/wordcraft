@@ -228,11 +228,8 @@ std::vector<GameState> load_level_data(const std::string& csv_file) { // Load le
 }
 
 
-std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameState& initial_state) { // Solve the game using bidirectional search
-    std::queue<std::pair<GameState, std::vector<std::pair<int, std::string>>>> forward_queue; // Queue for forward search
-    std::queue<std::pair<GameState, std::vector<std::pair<int, std::string>>>> backward_queue; // Queue for backward search
-
-    struct VectorPositionHash { // Custom hash function for vector of Positions
+std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameState& initial_state) {
+    struct VectorPositionHash {
         std::size_t operator()(const std::vector<Position>& vec) const {
             std::size_t seed = vec.size();
             for (const auto& pos : vec) {
@@ -243,91 +240,65 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
         }
     };
 
-    std::unordered_set<std::vector<Position>, VectorPositionHash> forward_visited; // Visited positions in forward search
-    std::unordered_set<std::vector<Position>, VectorPositionHash> backward_visited; // Visited positions in backward search
+    std::queue<GameState> search_queue;
+    std::unordered_map<std::vector<Position>, std::vector<std::pair<int, std::string>>, VectorPositionHash> visited;
 
-    forward_queue.push({initial_state, {}}); // Initialize forward search with the initial state
-    forward_visited.insert(initial_state.word_positions);
+    search_queue.push(initial_state);
+    visited[initial_state.word_positions] = {};
 
-    auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states(); // Calculate possible positions and generate goal states
+    auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
+    std::unordered_set<std::vector<Position>, VectorPositionHash> goal_positions;
     for (const auto& goal_state : goal_states) {
-        backward_queue.push({goal_state, {}}); // Initialize backward search with goal states
-        backward_visited.insert(goal_state.word_positions);
+        goal_positions.insert(goal_state.word_positions);
     }
 
-    int paths_traversed = 0; // Counter for the number of paths traversed
-    auto start_time = std::chrono::steady_clock::now(); // Start time for overall performance measurement
-    auto last_checkpoint_time = start_time; // Start time for the last 100,000 paths
+    int paths_traversed = 0;
+    auto start_time = std::chrono::steady_clock::now();
+    auto last_checkpoint_time = start_time;
 
-    bool forward = true; // Flag to indicate the direction of search
-    while (!forward_queue.empty() && !backward_queue.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
-        paths_traversed++; // Increment the paths traversed counter
-        if (paths_traversed % 100000 == 0) { // Periodically print the progress
-            auto current_time = std::chrono::steady_clock::now(); // Current time for performance measurement
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_checkpoint_time); // Calculate elapsed time for the last 100,000 paths
-            double speed = 100000.0 / (duration.count() / 1000.0); // Calculate search speed for the last 100,000 paths
+    while (!search_queue.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
+        paths_traversed++;
+        if (paths_traversed % 100000 == 0) {
+            auto current_time = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_checkpoint_time);
+            double speed = 100000.0 / (duration.count() / 1000.0);
             std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed 
                       << ", Speed: " << std::fixed << std::setprecision(2) << speed << " paths/sec" << std::endl;
-            last_checkpoint_time = current_time; // Update the checkpoint time
-        }
-        GameState current_state;
-        std::vector<std::pair<int, std::string>> path;
-
-        if (!forward_queue.empty()) { // Choose the next state from the forward queue
-            current_state = forward_queue.front().first;
-            path = forward_queue.front().second;
-            forward_queue.pop();
-        } else {
-            current_state = backward_queue.front().first; // Choose the next state from the backward queue
-            path = backward_queue.front().second;
-            backward_queue.pop();
-            forward = false;
+            last_checkpoint_time = current_time;
         }
 
-        if (path.size() > MAX_PATH_LENGTH) { // Skip paths that exceed the maximum allowed length
-            continue;  // Skip this branch as it exceeds the maximum allowed path length
-        }
+        GameState current_state = search_queue.front();
+        search_queue.pop();
 
-        auto& visited = forward ? forward_visited : backward_visited; // Choose the appropriate visited set
-        auto& queue = forward ? forward_queue : backward_queue; // Choose the appropriate queue
-
-        if (forward) {
-            if (backward_visited.count(current_state.word_positions)) { // Check if the current state is in the backward visited set
-                std::cout << "Solution found: ";
-                for (const auto& move : path) {
-                    std::cout << "(" << move.first << ", " << move.second << ") ";
-                }
-                std::cout << std::endl;
-                return {path, paths_traversed};
+        if (goal_positions.count(current_state.word_positions)) {
+            auto path = visited[current_state.word_positions];
+            std::cout << "Solution found: ";
+            for (const auto& move : path) {
+                std::cout << "(" << move.first << ", " << move.second << ") ";
             }
-        } else {
-            if (forward_visited.count(current_state.word_positions)) { // Check if the current state is in the forward visited set
-                std::cout << "Solution found: ";
-                for (const auto& move : path) {
-                    std::cout << "(" << move.first << ", " << move.second << ") ";
-                }
-                std::cout << std::endl;
-                return {path, paths_traversed};
-            }
+            std::cout << std::endl;
+            return {path, paths_traversed};
         }
 
-        for (int word_index = 0; word_index < current_state.word_positions.size(); ++word_index) { // Try moving each word in all possible directions
-            for (const auto& direction_pair : DIRECTIONS) {
-                const auto& direction_name = direction_pair.first;
-                const auto& direction = direction_pair.second;
-                GameState new_state = current_state; // Create a new state by moving the word
+        if (visited[current_state.word_positions].size() >= MAX_PATH_LENGTH) {
+            continue;
+        }
+
+        for (int word_index = 0; word_index < current_state.word_positions.size(); ++word_index) {
+            for (const auto& [direction_name, direction] : DIRECTIONS) {
+                GameState new_state = current_state;
                 new_state.move_word(word_index, direction);
-                if (!visited.count(new_state.word_positions)) { // Check if the new state has been visited
-                    visited.insert(new_state.word_positions); // Mark the new state as visited
-                    auto new_path = path;
+                if (!visited.count(new_state.word_positions)) {
+                    auto new_path = visited[current_state.word_positions];
                     new_path.emplace_back(word_index, direction_name);
-                    queue.push({new_state, new_path}); // Add the new state to the queue
+                    visited[new_state.word_positions] = new_path;
+                    search_queue.push(new_state);
                 }
             }
         }
     }
 
-    return {{}, paths_traversed}; // Return an empty solution if no solution is found
+    return {{}, paths_traversed};
 }
 
 void solve_level(const GameState& level_data) {
