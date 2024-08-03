@@ -356,6 +356,8 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
         double tie_breaker;
         std::vector<std::pair<int, std::string>> path;
 
+        Node() : state(), g_cost(0), f_cost(0), tie_breaker(0.0) {}  // Default constructor
+
         Node(GameState s, int g, int f, double tb, std::vector<std::pair<int, std::string>> p)
             : state(s), g_cost(g), f_cost(f), tie_breaker(tb), path(std::move(p)) {}
     };
