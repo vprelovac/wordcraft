@@ -320,6 +320,7 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
 // A* algorithm implementation
 SolveResult solve_game_hybrid(const GameState& initial_state) {
     auto start_time = std::chrono::high_resolution_clock::now();
+    auto last_checkpoint_time = start_time;
     struct Node {
         GameState state;
         int g_cost;
@@ -383,9 +384,14 @@ SolveResult solve_game_hybrid(const GameState& initial_state) {
         paths_traversed++;
 
         if (paths_traversed % 100000 == 0) {
+            auto current_time = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_checkpoint_time);
+            double speed = 100000.0 / (duration.count() / 1000.0);
             std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed 
                       << " (Using " << (using_astar ? "A*" : "BFS") << "), BFS queue: " << bfs_queue.size() 
-                      << ", A* queue: " << astar_queue.size() << ", BFS depth: " << bfs_depth << std::endl;
+                      << ", A* queue: " << astar_queue.size() << ", BFS depth: " << bfs_depth
+                      << ", Speed: " << std::fixed << std::setprecision(2) << speed << " paths/sec" << std::endl;
+            last_checkpoint_time = current_time;
         }
 
         if (std::find(goal_states.begin(), goal_states.end(), current.state) != goal_states.end()) {
