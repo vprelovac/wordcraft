@@ -632,13 +632,13 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "a")
             algorithm_choice = 1;
-        else if (arg == "i")
+        if (arg == "i")
             algorithm_choice = 2;
-        else if (arg == "2") {
+        if (arg == "2") {
             csv_file = "import2";
             grid_size = {10, 10};
         }
-        else if (arg == "s")
+        if (arg == "s")
             sequential_solve = true;
     }
 
