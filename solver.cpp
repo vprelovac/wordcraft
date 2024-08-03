@@ -462,7 +462,7 @@ int main(int argc, char* argv[]) {
             use_astar = true;
         }
         if (arg == "import2") {
-            csv_file = "import2";
+            csv_file = "2";
             grid_size = {10, 10};
         }
     }
