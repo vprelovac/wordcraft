@@ -33,7 +33,7 @@ struct GameState { // Represents the state of the game at any point
     std::string reversed_target_sentence; // Target sentence in reverse order
 
     GameState(int lvl, std::string sentence, std::vector<Position> word_pos, std::vector<Position> wall_pos, Position grid_sz)
-        : level(lvl), target_sentence(std::move(sentence)), word_positions(std::move(word_pos)), walls(std::move(wall_pos)), grid_size(std::move(grid_sz)), reversed_target_sentence(reverse_sentence(target_sentence)) {
+        : level(lvl), target_sentence(sentence), word_positions(word_pos), walls(wall_pos), grid_size(grid_sz), reversed_target_sentence(reverse_sentence(target_sentence)) {
         std::istringstream iss(target_sentence);
         std::string word;
         while (iss >> word) {
