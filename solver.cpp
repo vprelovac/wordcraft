@@ -320,7 +320,7 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
     });
 }
 
-SolveResult solve_game_ida_star_beam(const GameState& initial_state) {
+SolveResult solve_game_ida_star_beam(const GameState& initial_state, int max_paths = MAX_PATHS_TRAVERSED) {
     auto start_time = std::chrono::high_resolution_clock::now();
     auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
 
@@ -338,11 +338,11 @@ SolveResult solve_game_ida_star_beam(const GameState& initial_state) {
     int depth_limit = INITIAL_DEPTH_LIMIT;
     int paths_traversed = 0;
 
-    while (paths_traversed < MAX_PATHS_TRAVERSED) {
+    while (paths_traversed < max_paths) {
         std::vector<Node> beam = {Node(initial_state, 0, combined_heuristic(initial_state, goal_states[0]), 0.0, {})};
         std::unordered_map<std::vector<Position>, int, VectorPositionHash> visited;
 
-        while (!beam.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
+        while (!beam.empty() && paths_traversed < max_paths) {
             std::vector<Node> next_beam;
 
             for (const auto& current : beam) {
@@ -407,7 +407,7 @@ SolveResult solve_game_ida_star_beam(const GameState& initial_state) {
     return {paths_traversed, {}};
 }
 
-SolveResult solve_game_astar(const GameState& initial_state) {
+SolveResult solve_game_astar(const GameState& initial_state, int max_paths = MAX_PATHS_TRAVERSED) {
     auto start_time = std::chrono::high_resolution_clock::now();
     struct Node {
         GameState state;
@@ -445,7 +445,7 @@ SolveResult solve_game_astar(const GameState& initial_state) {
 
     int paths_traversed = 0;
 
-    while (!open_list.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
+    while (!open_list.empty() && paths_traversed < max_paths) {
         Node current = open_list.top();
         open_list.pop();
         paths_traversed++;
@@ -531,7 +531,7 @@ std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_f
 }
 
 
-SolveResult solve_game_bfs(const GameState& initial_state) {
+SolveResult solve_game_bfs(const GameState& initial_state, int max_depth = MAX_PATH_LENGTH, int max_paths = MAX_PATHS_TRAVERSED) {
     std::queue<GameState> search_queue;
     std::unordered_map<std::vector<Position>, std::vector<std::pair<int, std::string>>, VectorPositionHash> visited;
 
@@ -544,7 +544,7 @@ SolveResult solve_game_bfs(const GameState& initial_state) {
     auto start_time = std::chrono::steady_clock::now();
     auto last_checkpoint_time = start_time;
 
-    while (!search_queue.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
+    while (!search_queue.empty() && paths_traversed < max_paths) {
         paths_traversed++;
         if (paths_traversed % 100000 == 0) {
             auto current_time = std::chrono::steady_clock::now();
@@ -569,7 +569,7 @@ SolveResult solve_game_bfs(const GameState& initial_state) {
             return {paths_traversed, path};
         }
 
-        if (visited[current_state.word_positions].size() >= MAX_PATH_LENGTH) {
+        if (visited[current_state.word_positions].size() >= max_depth) {
             continue;
         }
 
@@ -590,6 +590,36 @@ SolveResult solve_game_bfs(const GameState& initial_state) {
     return {paths_traversed, {}};
 }
 
+SolveResult solve_level_hybrid(const GameState& level_data) {
+    std::cout << "Starting hybrid solve for Level " << level_data.level << std::endl;
+    
+    // First, try BFS with depth limit 15
+    auto bfs_result = solve_game_bfs(level_data, 15, MAX_PATHS_TRAVERSED);
+    if (!bfs_result.solution.empty()) {
+        std::cout << "BFS found a solution for Level " << level_data.level << std::endl;
+        return bfs_result;
+    }
+    
+    // If BFS fails, try A* with 1M paths limit
+    std::cout << "BFS failed, trying A* for Level " << level_data.level << std::endl;
+    auto astar_result = solve_game_astar(level_data, 1000000);
+    if (!astar_result.solution.empty()) {
+        std::cout << "A* found a solution for Level " << level_data.level << std::endl;
+        return astar_result;
+    }
+    
+    // If A* fails, try IDA* with 1M paths limit
+    std::cout << "A* failed, trying IDA* for Level " << level_data.level << std::endl;
+    auto ida_result = solve_game_ida_star_beam(level_data, 1000000);
+    if (!ida_result.solution.empty()) {
+        std::cout << "IDA* found a solution for Level " << level_data.level << std::endl;
+        return ida_result;
+    }
+    
+    std::cout << "All algorithms failed to find a solution for Level " << level_data.level << std::endl;
+    return {ida_result.paths_traversed + astar_result.paths_traversed + bfs_result.paths_traversed, {}};
+}
+
 void solve_level(const GameState& level_data, int algorithm_choice) {
     auto [possible_positions, goal_states] = level_data.calculate_possible_positions_and_goal_states();
     {
@@ -605,8 +635,10 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
         result = solve_game_bfs(level_data);
     } else if (algorithm_choice == 1) {
         result = solve_game_astar(level_data);
-    } else {
+    } else if (algorithm_choice == 2) {
         result = solve_game_ida_star_beam(level_data);
+    } else {
+        result = solve_level_hybrid(level_data);
     }
     
     auto solution = result.solution;
@@ -637,7 +669,7 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
 int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
-    int algorithm_choice = 0; // 0 for BFS, 1 for A*, 2 for IDA* with Beam Search
+    int algorithm_choice = 0; // 0 for BFS, 1 for A*, 2 for IDA* with Beam Search, 3 for Hybrid
     bool sequential_solve = false; // New flag for sequential solving
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -645,6 +677,8 @@ int main(int argc, char* argv[]) {
             algorithm_choice = 1;
         if (arg == "i")
             algorithm_choice = 2;
+        if (arg == "h")
+            algorithm_choice = 3;
         if (arg == "2") {
             csv_file = "import2";
             grid_size = {10, 10};
