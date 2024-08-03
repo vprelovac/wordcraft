@@ -358,7 +358,7 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
 }
 
 // A* algorithm implementation
-std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const GameState& initial_state) {
+BenchmarkResult solve_game_hybrid(const GameState& initial_state, bool benchmark) {
     struct Node {
         GameState state;
         int g_cost;
@@ -433,7 +433,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
                 std::cout << "(" << move.first << ", " << move.second << ") ";
             }
             std::cout << std::endl;
-            return {current.path, paths_traversed};
+            return {std::chrono::duration<double>(0), std::chrono::duration<double>(0), paths_traversed, current.path};
         }
 
         closed_list[current.state.word_positions] = current.g_cost;
@@ -493,10 +493,10 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_hybrid(const
         }
     }
 
-    return {{}, paths_traversed};
+    return {std::chrono::duration<double>(0), std::chrono::duration<double>(0), paths_traversed, {}};
 }
 
-std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const GameState& initial_state) {
+BenchmarkResult solve_game_astar(const GameState& initial_state, bool benchmark) {
     struct Node {
         GameState state;
         int g_cost;
@@ -580,7 +580,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game_astar(const 
         }
     }
 
-    return {{}, paths_traversed};
+    return {std::chrono::duration<double>(0), std::chrono::duration<double>(0), paths_traversed, {}};
 }
 
 std::vector<std::unique_ptr<GameState>> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
