@@ -15,9 +15,12 @@
 #include <memory>
 #include <future>
 #include <iterator>
+#include <algorithm>
 
 const int MAX_PATH_LENGTH = 59; // Maximum allowed path length to avoid infinite loops
 const int MAX_PATHS_TRAVERSED = 20000000; // Maximum number of paths to traverse to avoid excessive computation
+const int INITIAL_DEPTH_LIMIT = 10; // Initial depth limit for IDA*
+const int BEAM_WIDTH = 1000; // Beam width for IDA* with Beam Search
 
 std::mutex cout_mutex; // Mutex for thread-safe console output
 
@@ -317,6 +320,82 @@ int combined_heuristic(const GameState& state, const GameState& goal_state) {
     });
 }
 
+SolveResult solve_game_ida_star_beam(const GameState& initial_state) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+    auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states();
+
+    int depth_limit = INITIAL_DEPTH_LIMIT;
+    int paths_traversed = 0;
+
+    while (paths_traversed < MAX_PATHS_TRAVERSED) {
+        std::vector<Node> beam = {Node(initial_state, 0, combined_heuristic(initial_state, goal_states[0]), 0.0, {})};
+        std::unordered_map<std::vector<Position>, int, VectorPositionHash> visited;
+
+        while (!beam.empty() && paths_traversed < MAX_PATHS_TRAVERSED) {
+            std::vector<Node> next_beam;
+
+            for (const auto& current : beam) {
+                paths_traversed++;
+
+                if (paths_traversed % 100000 == 0) {
+                    std::cout << "Level " << initial_state.level << ": Paths traversed: " << paths_traversed 
+                              << " (Using IDA* with Beam Search), Depth: " << current.g_cost << std::endl;
+                }
+
+                if (std::find(goal_states.begin(), goal_states.end(), current.state) != goal_states.end()) {
+                    std::cout << "Solution found: ";
+                    for (const auto& move : current.path) {
+                        std::cout << "(" << move.first << ", " << move.second << ") ";
+                    }
+                    std::cout << std::endl;
+                    auto end_time = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<double> total_time = end_time - start_time;
+                    return {paths_traversed, current.path};
+                }
+
+                if (current.g_cost >= depth_limit) continue;
+
+                for (int word_index = 0; word_index < current.state.word_positions.size(); ++word_index) {
+                    for (const auto& [direction_name, direction] : DIRECTIONS) {
+                        GameState new_state = current.state;
+                        new_state.move_word(word_index, direction);
+
+                        if (visited.find(new_state.word_positions) != visited.end() && 
+                            visited[new_state.word_positions] <= current.g_cost + 1) {
+                            continue;
+                        }
+
+                        int new_g_cost = current.g_cost + 1;
+                        int new_f_cost = new_g_cost + combined_heuristic(new_state, goal_states[0]);
+
+                        auto new_path = current.path;
+                        new_path.emplace_back(word_index, direction_name);
+
+                        double new_tie_breaker = 0.0;
+                        for (size_t i = 0; i < new_state.word_positions.size(); ++i) {
+                            new_tie_breaker += std::abs(new_state.word_positions[i].first - goal_states[0].word_positions[i].first) +
+                                               std::abs(new_state.word_positions[i].second - goal_states[0].word_positions[i].second);
+                        }
+                        new_tie_breaker /= 1000.0;
+
+                        next_beam.emplace_back(new_state, new_g_cost, new_f_cost, new_tie_breaker, std::move(new_path));
+                        visited[new_state.word_positions] = new_g_cost;
+                    }
+                }
+            }
+
+            std::sort(next_beam.begin(), next_beam.end(), 
+                [](const Node& a, const Node& b) { return a.f_cost < b.f_cost || (a.f_cost == b.f_cost && a.tie_breaker < b.tie_breaker); });
+
+            beam = std::vector<Node>(next_beam.begin(), next_beam.begin() + std::min(static_cast<size_t>(BEAM_WIDTH), next_beam.size()));
+        }
+
+        depth_limit += 5;
+    }
+
+    return {paths_traversed, {}};
+}
+
 SolveResult solve_game_astar(const GameState& initial_state) {
     auto start_time = std::chrono::high_resolution_clock::now();
     struct Node {
@@ -513,8 +592,10 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
     
     if (algorithm_choice == 0) {
         result = solve_game_bfs(level_data);
-    } else {
+    } else if (algorithm_choice == 1) {
         result = solve_game_astar(level_data);
+    } else {
+        result = solve_game_ida_star_beam(level_data);
     }
     
     auto solution = result.solution;
@@ -525,7 +606,7 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
     std::lock_guard<std::mutex> lock(cout_mutex);
     if (!solution.empty()) {
         std::cout << "Solution for Level " << level_data.level << " (" 
-                  << (algorithm_choice == 0 ? "BFS" : "A*") << "): ";
+                  << (algorithm_choice == 0 ? "BFS" : (algorithm_choice == 1 ? "A*" : "IDA* with Beam Search")) << "): ";
         for (const auto& move : solution) {
             std::cout << "(" << level_data.words[move.first] << ", " << move.second << ") ";
         }
@@ -545,12 +626,14 @@ void solve_level(const GameState& level_data, int algorithm_choice) {
 int main(int argc, char* argv[]) {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
-    int algorithm_choice = 0; // 0 for BFS, 1 for A*
+    int algorithm_choice = 0; // 0 for BFS, 1 for A*, 2 for IDA* with Beam Search
     bool sequential_solve = false; // New flag for sequential solving
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "a")
             algorithm_choice = 1;
+        else if (arg == "i")
+            algorithm_choice = 2;
         else if (arg == "2") {
             csv_file = "import2";
             grid_size = {10, 10};
