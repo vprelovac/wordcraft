@@ -26,6 +26,32 @@ WordCraft is an engaging word puzzle game where players rearrange words to form 
 
 ## Technical Overview
 
+### Solver Documentation
+
+The solver is designed to solve the word puzzle game by rearranging words on a grid to form a target sentence. It supports multiple algorithms to find the optimal solution:
+
+1. **GameState Structure**: Represents the state of the game at any point, including the level, target sentence, word positions, walls, grid size, and words.
+
+2. **Heuristics**: Several heuristic functions are defined to estimate the cost of reaching the goal state from the current state. These include:
+   - Standard heuristic
+   - Goal count heuristic
+   - NRP heuristic
+   - Linear conflict heuristic
+   - Manhattan sliding heuristic
+   - Interaction cost heuristic
+
+3. **A* Algorithm**: An implementation of the A* algorithm that uses the combined heuristic to find the shortest path to the goal state.
+
+4. **Hybrid Algorithm**: A combination of BFS and A* algorithms to balance between breadth-first search and heuristic-based search.
+
+5. **Level Data Loading**: Loads level data from a CSV file, including word positions and wall positions.
+
+6. **Solving Levels**: The `solve_level` function solves a given level using the specified algorithm (BFS, A*, or hybrid).
+
+7. **Main Function**: The main function loads the level data, updates the grid size, and uses `std::async` to run `solve_level` in parallel for each level.
+
+The solver aims to find the minimum number of moves required to arrange the words on the grid to match the target sentence.
+
 - Built with HTML, CSS (Tailwind CSS), and JavaScript
 - Responsive design for cross-device compatibility
 - Efficient DOM manipulation and CSS transitions for smooth animations
