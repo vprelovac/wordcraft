@@ -449,10 +449,10 @@ function generateLevel(level) {
         if (isHardMode) {
             for (let i = 0; i < gridSize.rows; i++) {
                 gameState.walls.push({ row: i, col: 0 });
-                gameState.walls.push({ row: i, col: gridSize.cols - 1 });
+                //ameState.walls.push({ row: i, col: gridSize.cols - 1 });
             }
             for (let j = 0; j < gridSize.cols; j++) {
-                gameState.walls.push({ row: 0, col: j });
+                //gameState.walls.push({ row: 0, col: j });
                 gameState.walls.push({ row: gridSize.rows - 1, col: j });
             }
         }
@@ -460,7 +460,7 @@ function generateLevel(level) {
         for (let i = 0; i < numWalls; i++) {
             let wall;
             let attempts = 0;
-            const maxAttempts = 100;
+            const maxAttempts = 10000;
             do {
                 wall = {
                     row: Math.floor(gameState.rng() * gridSize.rows),
@@ -477,7 +477,7 @@ function generateLevel(level) {
         gameState.words.forEach(() => {
             let position;
             let attempts = 0;
-            const maxAttempts = 100;
+            const maxAttempts = 10000;
             do {
                 position = {
                     row: Math.floor(gameState.rng() * gridSize.rows),
