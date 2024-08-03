@@ -123,8 +123,9 @@ struct GameState { // Represents the state of the game at any point
         return false;
     }
 
-    std::vector<std::vector<Position>> generate_goal_states() const { // Generate all possible goal states for the target sentence
-        std::vector<std::vector<Position>> goal_states;
+    std::pair<int, std::vector<GameState>> calculate_possible_positions_and_goal_states() const {
+        int possible_positions = 0;
+        std::vector<GameState> goal_states;
         int sentence_length = words.size();
 
         // Helper function to check if a sequence of positions is valid (no walls)
@@ -137,7 +138,7 @@ struct GameState { // Represents the state of the game at any point
             return true;
         };
 
-        // Generate horizontal goal states (both left-to-right and right-to-left)
+        // Check horizontal positions
         for (int row = 0; row < grid_size.row; ++row) {
             for (int col = 0; col <= grid_size.col - sentence_length; ++col) {
                 std::vector<Position> goal_state;
@@ -145,15 +146,20 @@ struct GameState { // Represents the state of the game at any point
                     goal_state.push_back({row, col + i});
                 }
                 if (is_valid_sequence(goal_state)) {
-                    goal_states.push_back(goal_state);
-                    std::vector<Position> reversed_goal_state = goal_state;
-                    std::reverse(reversed_goal_state.begin(), reversed_goal_state.end());
-                    goal_states.push_back(reversed_goal_state);
+                    possible_positions += 2; // Count both left-to-right and right-to-left
+                    GameState forward_state = *this;
+                    forward_state.word_positions = goal_state;
+                    goal_states.push_back(forward_state);
+
+                    GameState backward_state = *this;
+                    std::reverse(goal_state.begin(), goal_state.end());
+                    backward_state.word_positions = goal_state;
+                    goal_states.push_back(backward_state);
                 }
             }
         }
 
-        // Generate vertical goal states (both top-to-bottom and bottom-to-top)
+        // Check vertical positions
         for (int col = 0; col < grid_size.col; ++col) {
             for (int row = 0; row <= grid_size.row - sentence_length; ++row) {
                 std::vector<Position> goal_state;
@@ -161,15 +167,20 @@ struct GameState { // Represents the state of the game at any point
                     goal_state.push_back({row + i, col});
                 }
                 if (is_valid_sequence(goal_state)) {
-                    goal_states.push_back(goal_state);
-                    std::vector<Position> reversed_goal_state = goal_state;
-                    std::reverse(reversed_goal_state.begin(), reversed_goal_state.end());
-                    goal_states.push_back(reversed_goal_state);
+                    possible_positions += 2; // Count both top-to-bottom and bottom-to-top
+                    GameState forward_state = *this;
+                    forward_state.word_positions = goal_state;
+                    goal_states.push_back(forward_state);
+
+                    GameState backward_state = *this;
+                    std::reverse(goal_state.begin(), goal_state.end());
+                    backward_state.word_positions = goal_state;
+                    goal_states.push_back(backward_state);
                 }
             }
         }
 
-        return goal_states;
+        return {possible_positions, goal_states};
     }
     std::string join_words(const std::vector<std::string>& words) const { // Join words into a single string with spaces
         std::ostringstream oss;
@@ -198,45 +209,6 @@ const std::unordered_map<std::string, Position> DIRECTIONS = { // Possible movem
     {"left", {0, -1}},
     {"right", {0, 1}}
 };
-
-int calculate_possible_positions(const GameState& state) { // Calculate the number of possible positions for the target sentence
-    int count = 0;
-    int sentence_length = state.words.size();
-
-    // Check horizontal positions for validity
-    for (int row = 0; row < state.grid_size.row; ++row) {
-        for (int col = 0; col <= state.grid_size.col - sentence_length; ++col) {
-            bool valid = true;
-            for (int i = 0; i < sentence_length; ++i) {
-                if (state.is_wall({row, col + i})) {
-                    valid = false;
-                    break;
-                }
-            }
-            if (valid) {
-                count += 2; // Count both left-to-right and right-to-left
-            }
-        }
-    }
-
-    // Check vertical positions for validity
-    for (int col = 0; col < state.grid_size.col; ++col) {
-        for (int row = 0; row <= state.grid_size.row - sentence_length; ++row) {
-            bool valid = true;
-            for (int i = 0; i < sentence_length; ++i) {
-                if (state.is_wall({row + i, col})) {
-                    valid = false;
-                    break;
-                }
-            }
-            if (valid) {
-                count += 2; // Count both top-to-bottom and bottom-to-top
-            }
-        }
-    }
-
-    return count;
-}
 
 std::vector<GameState> load_level_data(const std::string& csv_file) { // Load level data from a CSV file
     std::vector<GameState> levels;
@@ -293,12 +265,10 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
     forward_queue.push({initial_state, {}}); // Initialize forward search with the initial state
     forward_visited.insert(initial_state.word_positions);
 
-    auto goal_states = initial_state.generate_goal_states(); // Generate all possible goal states
+    auto [possible_positions, goal_states] = initial_state.calculate_possible_positions_and_goal_states(); // Calculate possible positions and generate goal states
     for (const auto& goal_state : goal_states) {
-        GameState goal_game_state = initial_state;
-        goal_game_state.word_positions = goal_state;
-        backward_queue.push({goal_game_state, {}}); // Initialize backward search with goal states
-        backward_visited.insert(goal_state);
+        backward_queue.push({goal_state, {}}); // Initialize backward search with goal states
+        backward_visited.insert(goal_state.word_positions);
     }
 
     int paths_traversed = 0; // Counter for the number of paths traversed
@@ -377,7 +347,7 @@ std::pair<std::vector<std::pair<int, std::string>>, int> solve_game(const GameSt
 }
 
 void solve_level(const GameState& level_data) {
-    int possible_positions = calculate_possible_positions(level_data);
+    auto [possible_positions, goal_states] = level_data.calculate_possible_positions_and_goal_states();
     {
         std::lock_guard<std::mutex> lock(cout_mutex);
         std::cout << "Solving Level " << level_data.level << std::endl;
