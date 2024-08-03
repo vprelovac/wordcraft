@@ -335,68 +335,24 @@ void solve_level(const GameState& level_data) {
     std::cout << std::endl;
 }
 
-class ThreadPool {
-public:
-    ThreadPool(size_t num_threads) : stop(false) {
-        for(size_t i = 0; i < num_threads; ++i)
-            workers.emplace_back([this] {
-                while(true) {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock(this->queue_mutex);
-                        this->condition.wait(lock, [this] { return this->stop || !this->tasks.empty(); });
-                        if(this->stop && this->tasks.empty()) return;
-                        task = std::move(this->tasks.front());
-                        this->tasks.pop();
-                    }
-                    task();
-                }
-            });
-    }
-
-    template<class F>
-    void enqueue(F&& f) {
-        {
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            tasks.emplace(std::forward<F>(f));
-        }
-        condition.notify_one();
-    }
-
-    ~ThreadPool() {
-        {
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            stop = true;
-        }
-        condition.notify_all();
-        for(std::thread &worker: workers)
-            worker.join();
-    }
-
-private:
-    std::vector<std::thread> workers;
-    std::queue<std::function<void()>> tasks;
-    std::mutex queue_mutex;
-    std::condition_variable condition;
-    bool stop;
-};
 
 int main() {
     std::string csv_file = "import";
     Position grid_size = {8, 8};
     auto levels = load_level_data(csv_file);
 
-    // Create a thread pool with the number of threads equal to the number of hardware threads
-    ThreadPool pool(std::thread::hardware_concurrency());
-
-    // Enqueue tasks for each level
+    // Use std::async to run solve_level in parallel for each level
+    std::vector<std::future<void>> futures;
     for (const auto& level_data : levels) {
-        pool.enqueue([&level_data]() {
+        futures.push_back(std::async(std::launch::async, [&level_data]() {
             solve_level(*level_data);
-        });
+        }));
     }
 
-    // The ThreadPool destructor will automatically wait for all tasks to complete
+    // Wait for all tasks to complete
+    for (auto& future : futures) {
+        future.get();
+    }
 
     return 0;
 }
